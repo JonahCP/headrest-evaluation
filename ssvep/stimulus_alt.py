@@ -1,0 +1,55 @@
+from tkinter import Tk, Canvas
+import time
+
+# Define frequencies, duration, and other experimental constants
+FREQ = [8, 10, 12, 14]  # in Hz
+STIMULUS_DURATION = 4   # in seconds
+REST_DURATION = 2       # in seconds
+
+# Define circle constants
+COLOR = 'yellow'
+RADIUS = 150
+
+# Define functions
+def flicker(freq):
+    print("Beginning %d Hz: " % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
+    duration = STIMULUS_DURATION
+    period = 1 / freq
+    while duration > 0:
+        present = canvas.find_withtag("circle")
+        if not present:
+            canvas.create_oval(circle_x - RADIUS, circle_y - RADIUS,
+                               circle_x + RADIUS, circle_y + RADIUS,
+                               fill = COLOR, tags = "circle")
+        else:
+            canvas.delete("circle")
+        root.update()
+
+        # Hold the frame for T seconds
+        time.sleep(period)
+        duration -= period
+
+# Setup Tkinter window
+root = Tk()
+root.title('SSVEP')
+root.attributes('-fullscreen', True)
+
+# Setup screen for drawing
+canvas_width = root.winfo_screenwidth()
+canvas_height = root.winfo_screenheight()
+canvas = Canvas(root, width = canvas_width, height = canvas_height, bg='black')
+canvas.pack()
+root.update()
+
+# Find center of the screen
+circle_x = canvas.winfo_width() // 2
+circle_y = canvas.winfo_height() // 2
+
+# Begin flickering
+print('Starting program timestamp:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
+for freq in FREQ:
+    start_time = time.time()
+    flicker(freq)
+    if canvas.find_withtag("circle"):
+        canvas.delete("circle")
+    time.sleep(REST_DURATION)   # Rest period
