@@ -1,5 +1,6 @@
 from tkinter import Tk, Canvas
 import time
+import random
 
 # Define duration and other experimental constants
 DURATION = 0.5      # in seconds (for both stimulus and rest periods)
@@ -20,10 +21,18 @@ def draw_square():
                             fill = COLOR, tags = 'shape')
 
 def flicker():
+    rand = random.randint(1, 9)
+    i = 0
     while True:
         present = canvas.find_withtag('shape')
         if not present:
-            draw_circle()
+            if i == rand:
+                draw_circle()
+                i = 0
+                rand = random.randint(1, 9)
+            else:
+                draw_square()
+                i += 1
         else:
             canvas.delete('shape')
         root.update()
