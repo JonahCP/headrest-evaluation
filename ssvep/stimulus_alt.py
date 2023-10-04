@@ -11,6 +11,11 @@ COLOR = 'yellow'
 RADIUS = 150
 
 # Define functions
+"""
+Flickers a COLOR circle of radius RADIUS at a defined frequency
+
+@param freq: frequency (in Hz) to flicker circle at
+""" 
 def flicker(freq):
     print("Beginning %d Hz: " % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
     duration = STIMULUS_DURATION
@@ -28,6 +33,8 @@ def flicker(freq):
         # Hold the frame for T seconds
         time.sleep(period)
         duration -= period
+    if canvas.find_withtag("circle"):
+        canvas.delete("circle")
 
 # Setup Tkinter window
 root = Tk()
@@ -50,6 +57,4 @@ print('Starting program timestamp:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Outp
 for freq in FREQ:
     start_time = time.time()
     flicker(freq)
-    if canvas.find_withtag("circle"):
-        canvas.delete("circle")
     time.sleep(REST_DURATION)   # Rest period

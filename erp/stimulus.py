@@ -1,36 +1,53 @@
-import turtle as t
+from tkinter import Tk, Canvas
 import time
 
-def circle_stimulus():
-    pen.fillcolor("yellow")
-    pen.begin_fill()
-    pen.circle(100)
-    pen.end_fill()
+# Define duration and other experimental constants
+DURATION = 0.5      # in seconds (for both stimulus and rest periods)
 
-def no_stimulus():
-    pen.fillcolor("black")
-    pen.begin_fill()
-    pen.circle(110)
-    pen.end_fill()
+# Define shape constants
+COLOR = 'yellow'
+RADIUS = 150
 
-# Set up the turtle screen with black background
-window = t.Screen()
-window.bgcolor("black")
-window.title("ERP Stimulus")
+# Define functions
+def draw_circle():
+    canvas.create_oval(pos_x - RADIUS, pos_y - RADIUS,
+                       pos_x + RADIUS, pos_y + RADIUS, 
+                       fill = COLOR, tags = 'shape')
+    
+def draw_square():
+    canvas.create_rectangle(pos_x - RADIUS, pos_y - RADIUS, 
+                            pos_x + RADIUS, pos_y + RADIUS, 
+                            fill = COLOR, tags = 'shape')
 
-t.tracer(1, 100)
+def flicker():
+    while True:
+        present = canvas.find_withtag('shape')
+        if not present:
+            draw_circle()
+        else:
+            canvas.delete('shape')
+        root.update()
 
-# Create a new turtle and set its speed to the fastest possible
-pen = t.Turtle()
-pen.speed(0)
-pen.hideturtle()
+        # Hold the frame
+        time.sleep(DURATION)
+        
 
-# Draw circle with radius of 100 pixels
-for i in range(20):
-    circle_stimulus()
-    start = time.time()
-    no_stimulus()
-    print("%.3f s" % (time.time() - start))
+# Setup Tkinter window
+root = Tk()
+root.title('SSVEP')
+root.attributes('-fullscreen', True)
 
-# Keep window open until manually closed
-# t.done()
+# Setup screen for drawing
+canvas_width = root.winfo_screenwidth()
+canvas_height = root.winfo_screenheight()
+canvas = Canvas(root, width = canvas_width, height = canvas_height, bg='black')
+canvas.pack()
+root.update()
+
+# Find center of the screen
+pos_x = canvas.winfo_width() // 2
+pos_y = canvas.winfo_height() // 2
+
+# Begin flickering
+print('Starting program timestamp:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
+flicker()
