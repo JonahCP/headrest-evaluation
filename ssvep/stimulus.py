@@ -1,72 +1,67 @@
-import tkinter as tk
+from tkinter import Tk, Canvas
 import time
 
+# Define frequencies, duration, and other experimental constants
+FREQ = [7.5, 8, 10, 12, 14]  # in Hz
+STIMULUS_DURATION = 4   # in seconds
+REST_DURATION = 2       # in seconds
 
-class SsvepStimuli:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("SSVEP")
-        self.root.configure(bg="black")  # Set background color to black
+# Define circle constants
+COLOR = 'yellow'
+RADIUS = 150
 
-        # Set screen width and height
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
+# Define functions
+"""
+Flickers a COLOR circle of radius RADIUS at a defined frequency
 
-        # Set window size and position
-        window_width = screen_width
-        window_height = screen_height
-        x_position = (screen_width - window_width) // 2
-        y_position = (screen_height - window_height) // 2
-
-        # Configure the window
-        root.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
-        root.attributes('-fullscreen', True)  # Set fullscreen
-        self.canvas = tk.Canvas(root, width=window_width, height=window_height, bg='black')
-        self.canvas.pack()
-
-        # Set initial frequency and duration
-        self.colors = ['yellow', 'yellow', 'yellow', 'yellow']
-        self.frequencies = [8, 10, 12, 14]  # frequencies
-        self.duration = 8000  # milliseconds (8 seconds)
-
-        # Start flickering with the initial frequency
-        self.colors_index = 0
-        self.frequency_index = 0
-        self.start_time = time.time() * 1000  # Current time in milliseconds
-        self.flicker = self.start_time
-        self.update_circle()
-
-    def update_circle(self):
-        current_time = time.time() * 1000  # Current time in milliseconds
-        elapsed_time = current_time - self.start_time
-
-        if elapsed_time > self.duration:
-            # Switch frequency after the duration
-            self.frequency_index = (self.frequency_index + 1) % len(self.frequencies)
-            self.colors_index = (self.colors_index + 1) % len(self.colors)
-            print(str(self.frequencies[self.frequency_index]) + "Hz Timestamp:",
-                  time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
-            self.start_time = current_time  # Reset start time
-
-        frequency = self.frequencies[self.frequency_index]
-        visibility = not self.canvas.find_withtag("circle")
-        if visibility:
-            # Calculate circle position for centering
-            circle_x = self.canvas.winfo_width() // 2
-            circle_y = self.canvas.winfo_height() // 2
-            self.canvas.create_oval(circle_x - 100, circle_y - 100, circle_x + 100, circle_y + 100,
-                                    fill=self.colors[self.colors_index],
-                                    tags="circle")
-            print(str(time.time() * 1000 - self.flicker))
+@param freq: frequency (in Hz) to flicker circle at
+""" 
+def flicker(freq):
+    print('Beginning %d Hz: ' % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
+    duration = STIMULUS_DURATION
+    period = 1 / freq
+    total_time = 0
+    cycles = 0
+    while duration > 0:
+        start = time.time()
+        present = canvas.find_withtag('circle')
+        if not present:
+            canvas.create_oval(circle_x - RADIUS, circle_y - RADIUS,
+                               circle_x + RADIUS, circle_y + RADIUS,
+                               fill = COLOR, tags = 'circle')
         else:
-            self.canvas.delete("circle")
+            canvas.delete('circle')
+        root.update()
 
-        # Call update_circle method again after 1000 / frequency milliseconds
-        self.root.after(int(1000 / frequency), self.update_circle)
+        # Hold the frame for T seconds
+        time.sleep(period - (time.time() - start))
+        duration -= period
+        cycles += 1
+        total_time += (time.time() - start)
+    if canvas.find_withtag('circle'):
+        canvas.delete('circle')
+        root.update()
+    print('Average freq: %.3f' % (cycles / total_time))
+    
 
+# Setup Tkinter window
+root = Tk()
+root.title('SSVEP')
+root.attributes('-fullscreen', True)
 
-# Initialize the GUI
-root = tk.Tk()
-app = SsvepStimuli(root)
-print("Starting program Timestamp:", time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
-root.mainloop()
+# Setup screen for drawing
+canvas_width = root.winfo_screenwidth()
+canvas_height = root.winfo_screenheight()
+canvas = Canvas(root, width = canvas_width, height = canvas_height, bg='black')
+canvas.pack()
+root.update()
+
+# Find center of the screen
+circle_x = canvas.winfo_width() // 2
+circle_y = canvas.winfo_height() // 2
+
+# Begin flickering
+print('Starting program timestamp:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
+for freq in FREQ:
+    flicker(freq)
+    time.sleep(REST_DURATION)   # Rest period
