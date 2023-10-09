@@ -17,7 +17,7 @@ Flickers a COLOR circle of radius RADIUS at a defined frequency
 @param freq: frequency (in Hz) to flicker circle at
 """ 
 def flicker(freq):
-    print('Beginning %d Hz: ' % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
+    print('Beginning %.1f Hz: ' % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
     duration = STIMULUS_DURATION
     period = 1 / freq
     total_time = 0
@@ -34,15 +34,24 @@ def flicker(freq):
         root.update()
 
         # Hold the frame for T seconds
-        time.sleep(period - (time.time() - start))
-        duration -= period
-        cycles += 1
+        time.sleep((period / 2 - (time.time() - start)))
+        duration -= (period / 2)
+        cycles += 0.5
         total_time += (time.time() - start)
     if canvas.find_withtag('circle'):
         canvas.delete('circle')
         root.update()
     print('Average freq: %.3f' % (cycles / total_time))
-    
+    print('Ending %.1f Hz: ' % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
+
+"""
+Rests at black screen for REST_DURATION seconds
+""" 
+def rest():
+    print()
+    time.sleep(REST_DURATION)
+
+
 
 # Setup Tkinter window
 root = Tk()
@@ -61,7 +70,7 @@ circle_x = canvas.winfo_width() // 2
 circle_y = canvas.winfo_height() // 2
 
 # Begin flickering
-print('Starting program timestamp:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
+print('Starting program:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
 for freq in FREQ:
-    flicker(freq)
-    time.sleep(REST_DURATION)   # Rest period
+    flicker(freq)       # Stimulation period
+    rest()              # Rest period
