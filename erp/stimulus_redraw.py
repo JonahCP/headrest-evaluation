@@ -1,6 +1,8 @@
 from tkinter import Tk, Canvas
 import time
 import random
+import pyautogui
+import os
 
 # Define duration and other experimental constants
 DURATION = 0.5      # in seconds (for both stimulus and rest periods)
@@ -23,19 +25,27 @@ def draw_square():
 def flicker():
     rand = random.randint(1, 9)
     i = 0
+    img = ""
     while True:
         present = canvas.find_withtag('shape')
         if not present:
             if i == rand:
                 draw_circle()
+                img = 'circle.png'
                 i = 0
                 rand = random.randint(1, 9)
             else:
                 draw_square()
                 i += 1
+                img = 'square.png'
+
         else:
             canvas.delete('shape')
+            img = 'blank.png'
+
         root.update()
+        sc = pyautogui.screenshot()
+        sc.save(os.getcwd() + "/../images/" + img)
 
         # Hold the frame
         time.sleep(DURATION)
@@ -43,6 +53,7 @@ def flicker():
 
 # Setup Tkinter window
 root = Tk()
+root.config(cursor='none')
 root.title('SSVEP')
 root.attributes('-fullscreen', True)
 

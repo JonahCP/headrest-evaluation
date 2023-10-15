@@ -2,7 +2,7 @@ from tkinter import Tk, Canvas
 import time
 
 # Define frequencies, duration, and other experimental constants
-FREQ = [7.5, 8, 10, 12, 14]  # in Hz
+FREQ = [7.5, 8.57, 10, 12] # in Hz
 STIMULUS_DURATION = 4   # in seconds
 REST_DURATION = 2       # in seconds
 
@@ -56,7 +56,9 @@ def rest():
 # Setup Tkinter window
 root = Tk()
 root.title('SSVEP')
+root.config(cursor='none')
 root.attributes('-fullscreen', True)
+
 
 # Setup screen for drawing
 canvas_width = root.winfo_screenwidth()
