@@ -18,20 +18,12 @@ for i in imgs:
     img = pygame.image.load(i).convert()
     loaded_imgs.append(img)
 
-elapsed_time = 0
 img_at = 0
-win.blit(loaded_imgs[img_at], (0, 0))
-pygame.display.flip()
-
-img_at = 1
 while True:
-    dt = clock.tick()
-    elapsed_time += dt
-    if elapsed_time > 500:
-        win.blit(loaded_imgs[img_at], (0, 0))
-        pygame.display.flip()
-        if img_at == 7:
-            img_at = 0
-        else:
-            img_at += 1
-        elapsed_time = 0
+    elapsed = clock.tick(2)
+    # print(elapsed)
+    
+    win.blit(loaded_imgs[img_at], (0, 0))
+    pygame.display.update()
+
+    img_at = (img_at + 1) % len(imgs)
