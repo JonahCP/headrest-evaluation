@@ -15,8 +15,9 @@ imgs = [blank, circle]
 
 pygame.init()
 win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-pygame.display.set_caption('ERP')
+pygame.display.set_caption('SSVEP')
 clock = pygame.time.Clock()
+pygame.mouse.set_visible(False)
 
 loaded_imgs = []
 for i in imgs:

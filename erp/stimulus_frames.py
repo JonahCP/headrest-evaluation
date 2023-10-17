@@ -12,6 +12,7 @@ pygame.init()
 win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 pygame.display.set_caption('ERP')
 clock = pygame.time.Clock()
+pygame.mouse.set_visible(False)
 
 loaded_imgs = []
 for i in imgs:
