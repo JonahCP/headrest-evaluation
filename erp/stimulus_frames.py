@@ -1,6 +1,6 @@
+import datetime
 import sys
 
-from PIL import Image, ImageTk
 import pygame
 
 blank = '../images/blank.png'
@@ -20,11 +20,22 @@ for i in imgs:
     loaded_imgs.append(img)
 
 img_at = 0
-while True:
-    elapsed = clock.tick(2)
-    # print(elapsed)
-    
-    win.blit(loaded_imgs[img_at], (0, 0))
-    pygame.display.update()
+running = True
+start = datetime.datetime.now()
+counter = 0
+while running:
+    elapsed = clock.tick(60)
+    counter += 1
+    if counter == 30:
+        win.blit(loaded_imgs[img_at], (0, 0))
+        pygame.display.update()
+        img_at = (img_at + 1) % len(imgs)
+        counter = 0
 
-    img_at = (img_at + 1) % len(imgs)
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            keys = pygame.key.get_pressed()
+            if event.type == pygame.QUIT or keys[pygame.K_ESCAPE]:
+                running = False
+            if event.key == pygame.K_SPACE:
+                print("Space Key Press at %d", datetime.datetime.now())
