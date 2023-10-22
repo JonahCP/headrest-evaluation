@@ -25,9 +25,9 @@ for i in imgs:
     img = pygame.image.load(i).convert()
     loaded_imgs.append(img)
 
-# win.blit(loaded_imgs[0], (0, 0))
-# pygame.display.update()
-# pygame.time.delay(REST_DURATION)
+win.blit(loaded_imgs[0], (0, 0))
+pygame.display.update()
+pygame.time.delay(REST_DURATION)
 
 img_at = 0
 for freq in FREQ:
@@ -41,14 +41,6 @@ for freq in FREQ:
         img_at = (img_at + 1) % len(imgs)
 
         duration -= clock.tick(freq * 2)
-
-        for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                keys = pygame.key.get_pressed()
-                if event.type == pygame.QUIT or keys[pygame.K_ESCAPE]:
-                    running = False
-                if event.key == pygame.K_SPACE:
-                    print("Space Key Press at %d", datetime.datetime.now())
 
     win.blit(loaded_imgs[0], (0, 0))
     pygame.display.update()
