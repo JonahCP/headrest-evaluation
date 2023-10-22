@@ -1,3 +1,4 @@
+import datetime
 import sys
 
 from PIL import Image, ImageTk
@@ -5,7 +6,7 @@ import pygame
 import time
 
 # Define frequencies, duration, and other experimental constants
-FREQ = [7.5, 8.57, 10, 12, 15] # in Hz
+FREQ = [7.5, 8.57, 10, 12] # in Hz
 STIMULUS_DURATION = 4000   # in ms
 REST_DURATION = 2000       # in ms
 
@@ -24,6 +25,10 @@ for i in imgs:
     img = pygame.image.load(i).convert()
     loaded_imgs.append(img)
 
+# win.blit(loaded_imgs[0], (0, 0))
+# pygame.display.update()
+# pygame.time.delay(REST_DURATION)
+
 img_at = 0
 for freq in FREQ:
     print('Beginning %.2f Hz: ' % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
@@ -36,6 +41,14 @@ for freq in FREQ:
         img_at = (img_at + 1) % len(imgs)
 
         duration -= clock.tick(freq * 2)
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                keys = pygame.key.get_pressed()
+                if event.type == pygame.QUIT or keys[pygame.K_ESCAPE]:
+                    running = False
+                if event.key == pygame.K_SPACE:
+                    print("Space Key Press at %d", datetime.datetime.now())
 
     win.blit(loaded_imgs[0], (0, 0))
     pygame.display.update()
