@@ -1,5 +1,5 @@
 # headrest-evaluation
-Stimuli for headrest evaluation
+Stimuli using pygame for headrest evaluation
 
 ## ERP Stimulus Requirements
 * One yellow shape as the stimulus on a black background separated by black screens
@@ -16,9 +16,3 @@ Stimuli for headrest evaluation
 * Rest duration of 20 seconds before moving onto next stimulus frequency
 * Must timestamp at the beginning and end of each stimulus period
 * Total duration of ~1.5 min
-
-## Troubleshooting
-```
-import tkinter as tk error
-```
-For Python 3, execute `sudo apt-get install python3-tk` in the terminal
