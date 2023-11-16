@@ -1,0 +1,49 @@
+#!/bin/bash
+echo "
+########################
+### START EXPERIMENT ###
+########################"
+
+read -p "Subject ID: " subID
+subID=$(printf "%03d" $subID)
+read -p "Session ID: " sessionID
+sessionID=$(printf "%03d" $sessionID)
+read -p "Recording ID (Type 'calib' for calibration): " recID
+dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+#######################################################################################################
+#### OFFLINE MODE #####
+#######################
+
+datetime="$(date +%Y)_$(date +%m)_$(date +%d)_$(date +%H%M%S)" # keep note of the date and time
+
+echo "
+-----------------------------------
+----> FES Control Experiment <-----
+-----------------------------------
+"
+# Create data files and folders
+expFolder=$dir/f1_data/"FES_Offline" # create a folder for Offline recordings
+subjectFolder=$expFolder/"Subject_"$subID"_FES_Offline" # create a subfolder for each subject
+sessionFolder=$subjectFolder/"Subject_"$subID"_Session_"${sessionID}"_FES_control_experiment" # for each session
+mkdir -p $sessionFolder/
+
+# echo $sessionFolder # display the session folder for this subject
+recID=$(printf "%03d" $recID)
+# create gdf/log file for current recording of current subject and current experiment (online/offline)
+gdffilename=$sessionFolder/"Subject_"$subID"_FES_Control_s"${sessionID}"_r"${recID}"_"$datetime".gdf"
+logfilename=$sessionFolder/"Subject_"$subID"_FES_Control_s"${sessionID}"_r"${recID}"_"$datetime".log"
+#echo $gdffilename
+
+#echo $logfilename
+
+# start streaming data into files
+cl_rpc openxdf $gdffilename $logfilename ""
+
+# Run the python script for the visual interface of the experiment
+cd c3_STM_interface
+python b1_STM_control.py
+cd ..
+
+# Stop streaming and close the gdf file
+cl_rpc closexdf
