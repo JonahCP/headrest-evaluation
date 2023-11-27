@@ -23,8 +23,8 @@ bci = BCI_tid.BciInterface()
 
 ### Define frequencies, duration, and other experimental constants
 FREQ = [7.5, 8.57, 10, 12] # in Hz
-STIMULUS_DURATION = 4   # in seconds
-REST_DURATION = 2       # in seconds
+STIMULUS_DURATION = 8   # in seconds
+REST_DURATION = 20      # in seconds
 
 
 ### Define circle constants
