@@ -56,3 +56,26 @@ Here we list the TiD values and the events that are correlated with it.
 | 300 | Standard stimulus (square) appears |
 | 301 | Target stimulus (circle) appears |
 | 302 | Key was pressed |
+
+## Executing Analysis Code
+### Step 1: Install MNE
+Install a specific version of MNE due to compatibility issues with the latest version.
+
+```
+pip install mne==1.6
+```
+### Step 2: Install Compatible Numpy Version
+The latest MNE version installs a newer numpy version that may cause errors. Install a compatible version:
+
+```
+pip install numpy==1.23.5
+```
+
+### Step 3: Modify MNE to Handle GDF Format
+MNE's handling of GDF files may cause errors due to lowpass filter settings. Perform a manual fix:
+
+Locate edf.py in your MNE installation, typically found in mne/io/edf/edf.py.
+
+Edit line 727: Change ```if info["highpass"] > info["lowpass"]:``` to ```if info["highpass"] >= info["lowpass"]:```
+
+This ensures proper handling of lowpass filter settings for GDF files.
