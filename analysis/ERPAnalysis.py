@@ -2,9 +2,13 @@ import os
 import numpy as np
 import mne
 import matplotlib.pyplot as plt
-from mne.preprocessing import ICA
 
-# Replace 'your_file.gdf' with the actual filename
+# Will be cleaning up this file, still a work in progress
+
+# Below Plots an average ERP waveform for each file, utilizing your channels of interest.
+# Shows for both the target - event ID 1 and base - event ID 2
+# Final Graph shows the final averaged ERP waveform of all graphs
+
 ERPfile = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonTestErp.gdf'
 ERPfile1 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonErp1.gdf'
 ERPfile2 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonErp2.gdf'
@@ -15,11 +19,98 @@ ERPfile4 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364D
 eog_channels = ['sens13', 'sens14', 'sens15']
 
 # Load and process each file
-# channels_of_interest = ['FP1', 'FPZ', 'FP2', 'F7', 'F3', 'FZ', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 'T8', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2', 'M1', 'M2']
-# channels_of_interest = ['AF3', 'AF4', 'F3', 'F1', 'FZ', 'F2', 'F4', 'FC3', 'FC1', 'FCZ', 'FC2', 'FC4', 'C3', 'C1', 'CZ', 'C2', 'C4', 'CP3', 'CP1', 'CPZ', 'CP2', 'CP4', 'P3', 'P1', 'PZ', 'P2', 'P4', 'PO3', 'POZ', 'PO4', 'O1', 'O2']
+# Define the EEG channels you are interested in
+channels_of_interest = ['FP1', 'FPZ', 'FP2', 'F7', 'F3', 'FZ', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 'T8', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2', 'M1', 'M2']
+# channels_of_interest = ['F7', 'FPZ', 'F8', 'F3', 'FZ', 'F4', 'C3', 'CZ', 'C4', 'P3', 'PZ', 'P4']
+
+standard_montage = mne.channels.make_standard_montage('standard_1020')
+
+# Initialize lists to store average responses and labels
+all_average_responses = []
+all_labels = []
+
+for event_id_of_interest in [1, 2]:
+    # Initialize list to store individual waveforms
+    individual_waveforms = []
+
+    for file in [ERPfile, ERPfile1, ERPfile2, ERPfile3, ERPfile4]:
+        raw = mne.io.read_raw_gdf(file, preload=True, eog=eog_channels)
+        raw.set_montage(standard_montage, match_case=False)
+
+        # Apply the notch filter
+        freq_to_notch = 60  # Replace with your desired notch frequency
+        raw.notch_filter(freq_to_notch, picks='eeg')
+
+        # Apply the bandpass filter
+        raw.filter(l_freq=.1, h_freq=30)
+
+        # Epoch the data
+        events, event_id = mne.events_from_annotations(raw)
+        epochs = mne.Epochs(raw, events, event_id, tmin=-0.2, tmax=0.8, baseline=(-0.2, 0.1), detrend=1, preload=True, event_repeated='drop')
+
+        # Average across all EEG channels
+        average_response = epochs[event_id_of_interest].average(picks='eeg')
+
+        # Plot the average response for the current file
+        times = average_response.times * 1000  # Convert to milliseconds
+        data = average_response.data.mean(axis=0)  # Take the mean across all channels
+        plt.plot(times, data, label=f'{file.split("/")[-1]} - Event ID {event_id_of_interest}')
+
+        # Store individual waveform for later use
+        individual_waveforms.append(data)
+
+        # Store average response and label for later use
+        all_average_responses.append(data)
+        all_labels.append(f'{file.split("/")[-1]} - Event ID {event_id_of_interest}')
+
+    # Customize the plot for each event_id_of_interest
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Amplitude (uV)')
+    plt.title(f'Average Response Across All Channels for Each File (Event ID {event_id_of_interest})')
+    plt.legend()
+    plt.grid(True)
+    plt.xticks(np.arange(0, max(times) + 100, 100))  # Add tick marks every 100ms
+    plt.show()
+
+    # Create a final graph that averages the individual waveforms for each event_id_of_interest
+    plt.figure(figsize=(12, 6))
+    plt.plot(times, np.array(individual_waveforms).mean(axis=0), label=f'Average Across Files - Event ID {event_id_of_interest}')
+
+    # Customize the final plot
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Amplitude (uV)')
+    plt.title(f'Average Response Across All Channels for All Files (Event ID {event_id_of_interest})')
+    plt.legend()
+    plt.grid(True)
+    plt.xticks(np.arange(0, max(times) + 100, 100))  # Add tick marks every 100ms
+    plt.show()
+
+# Create a final graph that averages the individual waveforms for all event_id_of_interest
+plt.figure(figsize=(12, 6))
+plt.plot(times, np.array(all_average_responses).mean(axis=0), label='Average Across Files - All Event IDs')
+
+# Customize the final plot
+plt.xlabel('Time (ms)')
+plt.ylabel('Amplitude (uV)')
+plt.title('Average Response Across All Channels for All Files (All Event IDs)')
+plt.legend()
+plt.grid(True)
+plt.xticks(np.arange(0, max(times) + 100, 100))  # Add tick marks every 100ms
+plt.show()
+
+##------------------------------------------------------------------------------------------------------------------##
+
+# Shows all selected channels averaged across all files, the one final averaged ERP
+# i.e you will see a chart for every single individual channel which is a result of averaging all data collected
+# from those nodes in every file/trial
+
+# Load and process each file
+channels_of_interest = ['FP1', 'FPZ', 'FP2', 'F7', 'F3', 'FZ', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 'T8', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2', 'M1', 'M2']
+
+# Testing some channels of interest
 # channels_of_interest = ['F3', 'FZ', 'F4', 'FC1', 'FC2', 'C3', 'CZ', 'C4', 'CP1', 'CP2', 'P3', 'PZ', 'P4', 'POZ', 'O1', 'O2']
 # channels_of_interest = ['FP1', 'FPZ', 'FP2', 'F7', 'F3', 'FZ', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 'T8', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2']
-channels_of_interest = ['F7', 'FPZ', 'F8', 'F3', 'FZ', 'F4', 'C3', 'CZ', 'C4', 'P3', 'PZ', 'P4']
+# channels_of_interest = ['F7', 'FPZ', 'F8', 'F3', 'FZ', 'F4', 'C3', 'CZ', 'C4', 'P3', 'PZ', 'P4']
 
 standard_montage = mne.channels.make_standard_montage('standard_1020')
 
@@ -53,7 +144,8 @@ for idx, channel in enumerate(channels_of_interest):
 
         # Epoch the data
         events, event_id = mne.events_from_annotations(raw)
-        epochs = mne.Epochs(raw, events, event_id, tmin=-.2, tmax=.6, baseline=(-.2, 0.1), detrend=1, preload=True, event_repeated='drop')
+        epochs = mne.Epochs(raw, events, event_id, tmin=-0.2, tmax=0.8, baseline=(-0.2, 0.1), detrend=1, preload=True,
+                            event_repeated='drop')
 
         all_epochs.append(epochs)
 
@@ -77,7 +169,6 @@ for idx, channel in enumerate(channels_of_interest):
 # Adjust layout
 plt.tight_layout(pad=4)  # Increase the padding
 plt.show()
-
 
 # Plot individual lines for each channel
 plt.figure(figsize=(12, 6))
@@ -111,65 +202,7 @@ plt.plot(times_all_channels, data_all_channels, label='Average All Channels', li
 # Customize the plot
 plt.xlabel('Time (s)')
 plt.ylabel('Amplitude (uV)')
-plt.title('Average Response Across All Channels')
+plt.title('Average Response Across All Channels for Target Stimuli')
 plt.legend()
 plt.grid(True)
 plt.show()
-
-
-#
-# # Replace 'your_file.gdf' with the actual filename
-# ERPfile1 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonErp1.gdf'
-# ERPfile2 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonErp2.gdf'
-# ERPfile3 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonErp3.gdf'
-# ERPfile4 = 'headrest-evaluation/analysis/StimuliVerificationTrials/11_17_23_364DEEGtests/JasonErp4.gdf'
-#
-# # Define EOG channels
-# eog_channels = ['sens13', 'sens14', 'sens15']
-#
-# # Define the EEG channels you are interested in
-# channels_of_interest = ['PZ', 'P3', 'P4', 'CZ', 'CP5', 'OZ', 'P8', 'POZ', 'O1', 'OZ', 'O2']
-#
-# # Load the data
-# raw = mne.io.read_raw_gdf(ERPfile3, preload=True, eog=eog_channels)
-#
-# # raw.pick_channels(channels_of_interest)
-#
-# # Apply the notch filter
-# freq_to_notch = 60  # Replace with your desired notch frequency
-# raw.notch_filter(freq_to_notch, picks='eeg')
-#
-# # Filter the data
-# raw.filter(l_freq=.1, h_freq=30)
-#
-# # Epoch the data (replace events and event_id with your actual event information)
-# events, event_id = mne.events_from_annotations(raw)
-#
-# # print(raw.annotations)
-# # print(events)
-# # print(event_id)
-#
-# # Specify tmin and tmax in milliseconds
-# epochs = mne.Epochs(raw, events, event_id, tmin=0, tmax=.5, baseline=(0, 0.1), preload=True, event_repeated='drop')
-#
-# print(epochs)
-#
-# # Access the events array
-# events_array = epochs.events
-#
-# # Print the contents of each event
-# for event in events_array:
-#     print(f"Sample Index: {event[0]}, Event Value: {event[1]}, Event ID: {event[2]}")
-#
-# # Specify the event ID of interest
-# event_id_of_interest = 1
-#
-# # Plot the average response for epochs with the specified event ID
-# epochs[event_id_of_interest].average().plot()
-#
-# # Plot the EOG channel data
-# raw.plot(duration=10, n_channels=len(eog_channels))  # Adjust scalings as needed
-#
-# # Show the plot
-# mne.viz.tight_layout()
-# mne.viz.show()
