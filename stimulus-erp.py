@@ -7,7 +7,7 @@ import sys
 
 ### Import LOOP packages and functions
 dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-sys.path.append(dirP + '/z1_ref_other/0_lib')
+sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
 
 import cnbiloop
 from cnbiloop import BCI, BCI_tid
@@ -24,6 +24,7 @@ bci = BCI_tid.BciInterface()
 
 ### Define duration and other experimental constants
 DURATION = 0.5      # in seconds (for both stimulus and rest periods)
+REST_DURATION = 1
 
 ### Define shape constants
 COLOR = 'yellow'
@@ -42,26 +43,41 @@ def draw_square():
                             fill = COLOR, tags = 'shape')
 
 def flicker():
-    rand = random.randint(1, 9)
+    rand1 = random.randint(1, 9)
+    rand2 = random.randint(1, 9)
+    if rand2 == rand1:
+        rand2 = (rand2 + 1) % 10
     i = 0
-    while True:
+    while i < 100:
         present = canvas.find_withtag('shape')
         if not present:
-            if i == rand:
+            if i % 10 == rand1 or i % 10 == rand2:
                 draw_circle()
                 sendTiD(10)
-                i = 0
-                rand = random.randint(1, 9)
             else:
                 draw_square()
                 sendTiD(20)
-                i += 1
+            i += 1
+            
+            if i % 10 == 0:
+                rand1 = random.randint(1, 9)
+                rand2 = random.randint(1, 9)
+                if rand2 == rand1:
+                    rand2 = (rand2 + 1) % 10
+            
+            root.update()
+
+            time.sleep(DURATION)
         else:
             canvas.delete('shape')
-        root.update()
+            root.update()
+            time.sleep(REST_DURATION)
+        
 
-        # Hold the frame
-        time.sleep(DURATION)
+        # root.update()
+
+        # # Hold the frame
+        # time.sleep(DURATION)
         
 
 ### Setup Tkinter window

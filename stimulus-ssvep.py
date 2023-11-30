@@ -6,7 +6,8 @@ import time
 
 ### Import LOOP packages and functions
 dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-sys.path.append(dirP + '/z1_ref_other/0_lib')
+sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
+print(sys.path)
 
 import cnbiloop
 from cnbiloop import BCI, BCI_tid
@@ -96,10 +97,12 @@ circle_y = canvas.winfo_height() // 2
 print('Starting program:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
 
 # Randomize order of frequencies presented
+import random
 freq_rand = FREQ.copy()
 random.shuffle(freq_rand)
 
 sendTiD(1)
+time.sleep(2)
 for freq in freq_rand:
     sendTiD(FREQ.index(freq) + 10)
     flicker(freq)       # Stimulation period
