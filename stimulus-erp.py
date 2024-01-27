@@ -23,8 +23,8 @@ bci = BCI_tid.BciInterface()
 
 
 ### Define duration and other experimental constants
-DURATION = 0.5      # in seconds (for both stimulus and rest periods)
-REST_DURATION = 1
+TRIAL_DURATION = 0.5    # trial in seconds
+REST_DURATION = 1       # rest in seconds
 
 ### Define shape constants
 COLOR = 'yellow'
@@ -42,43 +42,6 @@ def draw_square():
                             pos_x + RADIUS, pos_y + RADIUS, 
                             fill = COLOR, tags = 'shape')
 
-def flicker():
-    rand1 = random.randint(1, 9)
-    rand2 = random.randint(1, 9)
-    if rand2 == rand1:
-        rand2 = (rand2 + 1) % 10
-    i = 0
-    while i < 100:
-        present = canvas.find_withtag('shape')
-        if not present:
-            if i % 10 == rand1 or i % 10 == rand2:
-                draw_circle()
-                sendTiD(10)
-            else:
-                draw_square()
-                sendTiD(20)
-            i += 1
-            
-            if i % 10 == 0:
-                rand1 = random.randint(1, 9)
-                rand2 = random.randint(1, 9)
-                if rand2 == rand1:
-                    rand2 = (rand2 + 1) % 10
-            
-            root.update()
-
-            time.sleep(DURATION)
-        else:
-            canvas.delete('shape')
-            root.update()
-            time.sleep(REST_DURATION)
-        
-
-        # root.update()
-
-        # # Hold the frame
-        # time.sleep(DURATION)
-        
 
 ### Setup Tkinter window
 root = Tk()
@@ -97,8 +60,29 @@ root.update()
 pos_x = canvas.winfo_width() // 2
 pos_y = canvas.winfo_height() // 2
 
+### Generate stimulus sequence
+stims = [True, True, False, False, False, False, False, False, False, False]
+sequence = []
+for i in range(10):
+    random.shuffle(stims)
+    sequence.extend(stims)
+
 ### Begin stimuli
-print('Starting program timestamp:', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
+print('Starting program timestamp: ', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
 sendTiD(1)
-flicker()
+for trial in sequence:
+    # Present stimulus
+    if trial:
+        draw_circle()
+        sendTiD(10)
+    else:
+        draw_square()
+        sendTiD(20)
+    root.update()
+    time.sleep(TRIAL_DURATION)
+
+    # Inter-trial-interval (black screen)
+    canvas.delete('shape')
+    root.update()
+    time.sleep(REST_DURATION)
 sendTiD(1)
