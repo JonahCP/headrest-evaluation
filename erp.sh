@@ -7,5 +7,8 @@ while [[ -e $testname.txt ]] ; do
 done
 
 cl_rpc openxdf "$testname.gdf" "$testname.log" ""
+echo "Recording started for $testname.gdf"
+echo "Beginning ERP stimulus"
 python stimulus-erp.py
+echo "Closing recording"
 cl_rpc closexdf

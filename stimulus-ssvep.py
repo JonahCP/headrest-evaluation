@@ -7,7 +7,6 @@ import time
 ### Import LOOP packages and functions
 dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
-print(sys.path)
 
 import cnbiloop
 from cnbiloop import BCI, BCI_tid
@@ -102,10 +101,12 @@ freq_rand = FREQ.copy()
 random.shuffle(freq_rand)
 
 sendTiD(1)
+
 time.sleep(2)
 for freq in freq_rand:
     sendTiD(FREQ.index(freq) + 10)
     flicker(freq)       # Stimulation period
     sendTiD(FREQ.index(freq) + 10)
     rest()              # Rest period
+
 sendTiD(1)

@@ -68,8 +68,9 @@ for i in range(10):
     sequence.extend(stims)
 
 ### Begin stimuli
-print('Starting program timestamp: ', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
+print('Starting program: ', time.strftime('%Y-%m-%d %H:%M:%S'))  # Output current timestamp
 sendTiD(1)
+
 for trial in sequence:
     # Present stimulus
     if trial:
@@ -85,4 +86,5 @@ for trial in sequence:
     canvas.delete('shape')
     root.update()
     time.sleep(REST_DURATION)
+
 sendTiD(1)

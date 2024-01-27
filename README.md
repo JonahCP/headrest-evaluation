@@ -1,5 +1,5 @@
 # headrest-evaluation
-Stimuli using pygame for headrest evaluation
+Stimuli using PyGame and TKinter for headrest evaluation
 
 ## ERP Stimulus Requirements
 * One yellow shape as the stimulus on a black background separated by black screens
