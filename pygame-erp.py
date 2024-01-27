@@ -24,11 +24,11 @@ bci = BCI_tid.BciInterface()
 
 
 ### Define TiD values
-START       = 299   # Beginning of ERP trials
-END         = 399   # End of ERP trials
-STANDARD    = 300   # Standard stimulus
-TARGET      = 301   # Target stimulus
-KEY_PRESS   = 302   # Key pressed
+START       = 1     # Beginning of ERP trials
+END         = 1     # End of ERP trials
+STANDARD    = 10    # Standard stimulus
+TARGET      = 20    # Target stimulus
+KEY_PRESS   = 30    # Key pressed
 
 
 ### Main method 

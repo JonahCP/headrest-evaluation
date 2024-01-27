@@ -31,8 +31,8 @@ REST_DURATION = 2000       # in ms
 
 
 ### Define TiD values
-START = 99  # Beginning of SSVEP trials
-END = 199   # End of SSVEP trials
+START = 1   # Beginning of SSVEP trials
+END = 1     # End of SSVEP trials
 
 
 ### Define functions
@@ -45,7 +45,7 @@ def flicker():
     shuffle(freq_rand)
     for freq in freq_rand:
         # print('Beginning %.2f Hz: ' % (freq) + time.strftime('%Y-%m-%d %H:%M:%S'))
-        sendTiD(FREQ.index(freq) + 100)
+        sendTiD(FREQ.index(freq) + 10)
         duration = STIMULUS_DURATION
         clock.tick(freq * 2)
 

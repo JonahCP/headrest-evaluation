@@ -39,23 +39,23 @@ Here we list the TiD values and the events that are correlated with it.
 ### SSVEP TiD
 | TiD | Event |
 | --- | --- |
-| 99  | Beginning of SSVEP trials |
-| 199 | End of SSVEP trials |
-| 100 | Start/End of 7.5 Hz trial |
-| 101 | Start/End of 8.57 Hz trial |
-| 102 | Start/End of 10 Hz trial |
-| 103 | Start/End of 12 Hz trial |
+| 1   | Beginning of SSVEP trials |
+| 1   | End of SSVEP trials |
+| 10  | Start/End of 7.5 Hz trial |
+| 11  | Start/End of 8.57 Hz trial |
+| 12  | Start/End of 10 Hz trial |
+| 13  | Start/End of 12 Hz trial |
 
 **Note:** In the timestamps, a trial for a frequency will begin with a TiD and end with the same TiD. For example, a trial for 7.5 Hz will timestamp the beginning of the trial with a 100 TiD. When it ends, it will timestamp the end of the trial with a 100 TiD as well.
 
 ### ERP TiD
 | TiD | Event |
 | --- | --- |
-| 299 | Beginning of ERP trials |
-| 399 | End of ERP trials |
-| 300 | Standard stimulus (square) appears |
-| 301 | Target stimulus (circle) appears |
-| 302 | Key was pressed |
+| 1   | Beginning of ERP trials |
+| 1   | End of ERP trials |
+| 10  | Standard stimulus (square) appears |
+| 20  | Target stimulus (circle) appears |
+| 30  | Key was pressed |
 
 ## Executing Analysis Code
 ### Step 1: Install MNE
