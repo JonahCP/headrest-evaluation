@@ -1,13 +1,13 @@
 # import datetime
 import os
 import sys
-
+import random
 import pygame
 
 
 ### Import LOOP packages and functions
 dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-# #print(dirP + '/4_ref_other')
+#print(dirP + '/4_ref_other')
 sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
 
 import cnbiloop
@@ -30,44 +30,61 @@ STANDARD    = 10    # Standard stimulus
 TARGET      = 20    # Target stimulus
 KEY_PRESS   = 30    # Key pressed
 
+### Define duration and other experimental constants
+TRIAL_DURATION = 500    # trial in seconds
+REST_DURATION = 1000    # rest in seconds
 
-### Main method 
-blank = 'images/blank.png'
-square = 'images/square.png'
-circle = 'images/circle.png'
-imgs = [square, blank, square, blank, circle, blank, square, blank]
+### Define shape constants
+YELLOW = (255, 255, 0)
+BLACK = (0, 0, 0)
+RADIUS = 150
 
+### Define functions
+def awaitInput(duration):
+    while duration > 0:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                # print("Space key pressed")
+                sendTiD(KEY_PRESS)
+        duration -= clock.tick(60)
+
+
+### Set up PyGame window 
 pygame.init()
 win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN, vsync=1)
+win.fill(BLACK)
+pygame.display.update()
 pygame.display.set_caption('ERP')
-clock = pygame.time.Clock()
 pygame.mouse.set_visible(False)
+clock = pygame.time.Clock()
 
-loaded_imgs = []
-for i in imgs:
-    img = pygame.image.load(i).convert()
-    loaded_imgs.append(img)
+# Find coordinates to render image
+pos_x, pos_y = win.get_size()
+pos_x //= 2
+pos_y //= 2
+
+### Generate stimulus sequence
+stims = [True, True, False, False, False, False, False, False, False, False]
+sequence = []
+for i in range(10):
+    random.shuffle(stims)
+    sequence.extend(stims)
 
 sendTiD(START)
-img_at = 0
-running = True
-# start = datetime.datetime.now()
-counter = 0
-while running:
-    elapsed = clock.tick(60)
-    counter += 1
-    if counter == 30:
-        win.blit(loaded_imgs[img_at], (0, 0))
-        pygame.display.update()
-        img_at = (img_at + 1) % len(imgs)
-        counter = 0
 
-    for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN:
-            keys = pygame.key.get_pressed()
-            if event.type == pygame.QUIT or keys[pygame.K_ESCAPE]:
-                running = False
-            if event.key == pygame.K_SPACE:
-                # print("Space Key Press at %d", datetime.datetime.now())
-                sendTiD(KEY_PRESS)
+pygame.time.delay(2000)
+for trial in sequence:
+    if trial:
+        pygame.draw.circle(win, YELLOW, (pos_x, pos_y), RADIUS)
+        sendTiD(TARGET)
+    else:
+        pygame.draw.rect(win, YELLOW, pygame.Rect(pos_x - RADIUS, pos_y - RADIUS, RADIUS * 2, RADIUS * 2))
+        sendTiD(STANDARD)
+    pygame.display.update()
+    awaitInput(TRIAL_DURATION)
+
+    pygame.draw.rect(win, BLACK, pygame.Rect(pos_x - RADIUS, pos_y - RADIUS, RADIUS * 2, RADIUS * 2))
+    pygame.display.update()
+    awaitInput(REST_DURATION)
+
 sendTiD(END)
