@@ -7,20 +7,20 @@ import pygame
 
 
 ### Import LOOP packages and functions
-# dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-# sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
+dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
 
-# import cnbiloop
-# from cnbiloop import BCI, BCI_tid
+import cnbiloop
+from cnbiloop import BCI, BCI_tid
 
-# sys.path.append(dirP + '/ssvep/1_packages')
-# from serialCommunication import SerialWriter
+sys.path.append(dirP + '/ssvep/1_packages')
+from serialCommunication import SerialWriter
 
-# def sendTiD(Event_):
-#     bci.id_msg_bus.SetEvent(Event_)
-#     bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
+def sendTiD(Event_):
+    bci.id_msg_bus.SetEvent(Event_)
+    bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
 
-# bci = BCI_tid.BciInterface()
+bci = BCI_tid.BciInterface()
 
 
 ### Define frequencies, duration, and other experimental constants
@@ -57,7 +57,7 @@ x = (x / 2) - (im_x / 2)
 y = (y / 2) - (im_y / 2)
 
 ### Begin flickering stimuli
-# sendTiD(1)
+sendTiD(1)
 
 pygame.time.delay(2000)
 freq_rand = FREQ.copy()
@@ -67,7 +67,7 @@ for freq in freq_rand:
     duration = STIMULUS_DURATION
     clock.tick(freq * 2)
 
-    # sendTiD(FREQ.index(freq) + 10)
+    sendTiD(FREQ.index(freq) + 10)
     i = 0
     while duration > 0:
         win.blit(boards[i], (x, y))
@@ -76,9 +76,9 @@ for freq in freq_rand:
 
         duration -= clock.tick(freq * 2)
 
-    # sendTiD(FREQ.index(freq) + 10)
+    sendTiD(FREQ.index(freq) + 10)
     pygame.draw.rect(win, GREY, pygame.Rect(x, y, im_x, im_y))
     pygame.display.update()
     pygame.time.delay(REST_DURATION)
 
-# sendTiD(1)
+sendTiD(1)
