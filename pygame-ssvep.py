@@ -26,7 +26,7 @@ bci = BCI_tid.BciInterface()
 ### Define frequencies, duration, and other experimental constants
 FREQ = [7.5, 8.57, 10, 12] # in Hz
 STIMULUS_DURATION = 8000   # in ms
-REST_DURATION = 2000       # in ms
+REST_DURATION = 15000       # in ms
 
 GREY = (140, 140, 140)
 
@@ -59,11 +59,11 @@ y = (y / 2) - (im_y / 2)
 ### Begin flickering stimuli
 sendTiD(1)
 
-pygame.time.delay(2000)
+pygame.time.delay(5000)
 freq_rand = FREQ.copy()
 shuffle(freq_rand)
 for freq in freq_rand:
-    print("Beginning %.2f Hz" % freq)
+    # print("Beginning %.2f Hz" % freq)
     duration = STIMULUS_DURATION
     clock.tick(freq * 2)
 

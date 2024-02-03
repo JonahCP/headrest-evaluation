@@ -72,7 +72,7 @@ for i in range(10):
 
 sendTiD(START)
 
-pygame.time.delay(2000)
+pygame.time.delay(5000)
 for trial in sequence:
     if trial:
         pygame.draw.circle(win, YELLOW, (pos_x, pos_y), RADIUS)
