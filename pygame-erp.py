@@ -1,4 +1,5 @@
-# import datetime
+from datetime import datetime
+import pandas as pd
 import os
 import sys
 import random
@@ -10,17 +11,17 @@ dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 #print(dirP + '/4_ref_other')
 sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
 
-import cnbiloop
-from cnbiloop import BCI, BCI_tid
+# import cnbiloop
+# from cnbiloop import BCI, BCI_tid
 
 sys.path.append(dirP + '/1_packages')
 from serialCommunication import SerialWriter
 
-def sendTiD(Event_):
-    bci.id_msg_bus.SetEvent(Event_)
-    bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
+# def sendTiD(Event_):
+#     bci.id_msg_bus.SetEvent(Event_)
+#     bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
 
-bci = BCI_tid.BciInterface()
+# bci = BCI_tid.BciInterface()
 
 
 ### Define TiD values
@@ -49,6 +50,12 @@ def awaitInput(duration):
         duration -= clock.tick(60)
 
 
+datetimes = []
+events = []
+def logEvent(event):
+    datetimes.append(datetime.utcnow().strftime('%Y-%m-%d %H.%M.%S.%f')[:-3])
+    events.append(event)
+
 ### Set up PyGame window 
 pygame.init()
 win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN, vsync=1)
@@ -70,16 +77,19 @@ for i in range(10):
     random.shuffle(stims)
     sequence.extend(stims)
 
-sendTiD(START)
+logEvent('START PROTOCOL')
+# sendTiD(START)
 
 pygame.time.delay(5000)
 for trial in sequence:
     if trial:
         pygame.draw.circle(win, YELLOW, (pos_x, pos_y), RADIUS)
-        sendTiD(TARGET)
+        logEvent('TARGET')    
+        # sendTiD(TARGET)
     else:
         pygame.draw.rect(win, YELLOW, pygame.Rect(pos_x - RADIUS, pos_y - RADIUS, RADIUS * 2, RADIUS * 2))
-        sendTiD(STANDARD)
+        logEvent('STANDARD')    
+        # sendTiD(STANDARD)
     pygame.display.update()
     awaitInput(TRIAL_DURATION)
 
@@ -87,4 +97,13 @@ for trial in sequence:
     pygame.display.update()
     awaitInput(REST_DURATION)
 
-sendTiD(END)
+# sendTiD(END)
+logEvent('END PROTOCOL')    
+    
+event_timestamps = pd.DataFrame(
+    {'datetimes': datetimes,
+     'events': events
+     })
+
+### uncomment for initial headrest testing trials
+event_timestamps.to_csv('erp_timestamps_' + datetime.utcnow().strftime('%Y-%m-%d_%H.%M.%S.%f')[:-3])

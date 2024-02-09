@@ -1,3 +1,5 @@
+import pandas as pd
+from datetime import datetime 
 import os
 import sys
 from tkinter import Tk, Canvas
@@ -8,17 +10,17 @@ import time
 dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
 
-import cnbiloop
-from cnbiloop import BCI, BCI_tid
+# import cnbiloop
+# from cnbiloop import BCI, BCI_tid
 
 sys.path.append(dirP + '/1_packages')
 from serialCommunication import SerialWriter
 
-def sendTiD(Event_):
-    bci.id_msg_bus.SetEvent(Event_)
-    bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
+# def sendTiD(Event_):
+#     bci.id_msg_bus.SetEvent(Event_)
+#     bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
 
-bci = BCI_tid.BciInterface()
+# bci = BCI_tid.BciInterface()
 
 
 ### Define frequencies, duration, and other experimental constants
@@ -73,6 +75,12 @@ def rest():
     print()
     time.sleep(REST_DURATION)
 
+datetimes = []
+events = []
+def logEvent(event):
+    datetimes.append(datetime.utcnow().strftime('%Y-%m-%d %H.%M.%S.%f')[:-3])
+    events.append(event)
+
 
 ### Setup Tkinter window
 root = Tk()
@@ -100,13 +108,27 @@ import random
 freq_rand = FREQ.copy()
 random.shuffle(freq_rand)
 
-sendTiD(1)
+datetimes.append(datetime.utcnow().strftime('%Y-%m-%d %H.%M.%S.%f')[:-3])
+events.append('START PROTOCOL')
+# sendTiD(1)
 
 time.sleep(2)
 for freq in freq_rand:
-    sendTiD(FREQ.index(freq) + 10)
+    # sendTiD(FREQ.index(freq) + 10)
+    logEvent('START ' + str(freq) + 'Hz')
     flicker(freq)       # Stimulation period
-    sendTiD(FREQ.index(freq) + 10)
+    # sendTiD(FREQ.index(freq) + 10)
+    logEvent('END ' + str(freq) + 'Hz')
     rest()              # Rest period
 
-sendTiD(1)
+# sendTiD(1)
+logEvent('END PROTCOL')
+
+
+event_timestamps = pd.DataFrame(
+    {'datetimes': datetimes,
+     'events': events
+     })
+
+### uncomment for initial headrest testing trials
+event_timestamps.to_csv('ssvep_timestamps_' + datetime.utcnow().strftime('%Y-%m-%d_%H.%M.%S.%f')[:-3])
