@@ -9,17 +9,25 @@ matplotlib.use('Agg')
 
 # Specify SSVEP data directory
 # E.g. './data/carson/ssvep/*.gdf'
-dir = './data/brian/ssvep/*.gdf'
+
+name = 'Carson'
+
+dir = f'./data_temp/data/{name}/{name}SSVEP*.gdf'
 
 # Find and list SSVEP data files
 SSVEPfiles = glob.glob(dir)
 
-name = (dir.split('/')[2]).title()
-# Define EEG channels of interest
+# # Define EEG channels of interest
+# eeg_channels = [
+#     'FP1', 'FPZ', 'FP2', 'F7', 'F3', 'FZ', 'F4', 'F8', 
+#     'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 
+#     'T8', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 
+#     'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2'
+# ]
+
 eeg_channels = [
-    'FP1', 'FPZ', 'FP2', 'F7', 'F3', 'FZ', 'F4', 'F8', 
-    'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 
-    'T8', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 
+   'C3', 'CZ', 'C4', 
+    'CP5', 'CP1', 'CP2', 'P7', 'P3', 'PZ', 
     'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2'
 ]
 eog_channels = ['sens13', 'sens14', 'sens15']
@@ -84,7 +92,103 @@ freq_mapping = {
 sfreq = 512
 
 # Create a report for the current file
-report = mne.Report(title='SSVEP Test Report', verbose=True)
+report = mne.Report(title=f'SSVEP {name} Report', verbose=True)
+
+# Store all raw files
+raw_alls = [mne.io.read_raw_gdf(file, eog=eog_channels, preload=True, stim_channel='Status') for file in SSVEPfiles]
+
+for raw in raw_alls:
+    raw.set_montage(standard_montage, match_case=False)
+    raw.pick_channels(eeg_channels)
+    raw.notch_filter(60, verbose='INFO')
+
+# Do analysis steps for raw_alls
+raw_all = mne.concatenate_raws(raw_alls)
+
+events, _ = mne.events_from_annotations(raw_all)
+
+all_epochs = mne.Epochs(raw_all, events, event_id=list(freq_mapping.keys()), event_repeated='merge', tmin=2, tmax=7, baseline=None, verbose='INFO')
+
+# Only keep every other epoch
+all_epochs = all_epochs[::2]
+
+# Compute PSD for each frequency and average
+for event_id, freq in freq_mapping.items():
+    # Extract epochs for the current frequency
+    epoch = mne.Epochs(raw_all, events, event_id, event_repeated='merge', tmin=2, tmax=7, baseline=None, verbose='INFO')
+
+    spectrum = epoch[f'{event_id}'].compute_psd(method='welch', fmin=1, fmax=40, n_overlap=(2561//2))
+
+    psds, freqs = spectrum.get_data(return_freqs=True)
+
+    psds_plot = 10 * np.log10(psds)  # dB
+
+    # psds_plot = psds # Linear scale
+
+    # Average PSD across epochs and channels
+    psds_mean = psds_plot.mean(axis=(0, 1))
+    psds_std = psds_plot.std(axis=(0, 1))
+    
+    # Plotting
+    fig = plt.figure()
+    plt.plot(freqs, psds_mean, color='black')  # Converting power to dB
+    plt.title(f'Mean PSD for {freq} Hz Stimulus')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Power Spectral Density (dB/Hz)')
+    plt.fill_between(freqs, psds_mean - psds_std, psds_mean + psds_std, color='black', alpha=0.2)
+    plt.axvline(x=freq, color='red', linestyle='--', label='1f')
+    plt.axvline(x=freq * 2, color='blue', linestyle='--', label='2f')
+    plt.axvline(x=freq * 3, color='green', linestyle='--', label='3f')
+    plt.legend()
+    plt.show()
+
+    # # Average across epochs only not channels
+    # psds_mean = psds_plot.mean(axis=0)
+    # psds_std = psds_plot.std(axis=0)
+
+    # # Plotting
+    # fig = plt.figure()
+    # plt.plot(freqs, psds_mean.T, color='black')  # Converting power to dB
+    # plt.title(f'Mean PSD for {freq} Hz Stimulus')
+    # plt.xlabel('Frequency (Hz)')
+    # plt.ylabel('Power Spectral Density (dB/Hz)')
+    # # plt.fill_between(freqs, psds_mean - psds_std, psds_mean + psds_std, color='black', alpha=0.2)
+    # plt.axvline(x=freq, color='red', linestyle='--', label='1f')
+    # plt.axvline(x=freq * 2, color='blue', linestyle='--', label='2f')
+    # plt.axvline(x=freq * 3, color='green', linestyle='--', label='3f')
+    # plt.legend()
+    # plt.show()
+
+    # Add the figure to the report
+    report.add_figure(fig, f'SSVEP ({freq} Hz)', section='SSVEP All Trials')
+    plt.close()
+    
+    # Compute SNR
+    snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+
+    # Average across epochs (only have one)
+    snr_mean = snr.mean(axis=(0, 1))
+    snr_std = snr.std(axis=(0, 1))
+
+    # Plot SNR spectrum with mean and standard deviation
+    figure_snr = plt.figure()
+    plt.plot(freqs, snr_mean, zorder=2, color='black')  # Plotting the mean SNR
+    plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
+
+    plt.title(f'SNR ({freq} Hz)')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('SNR')
+
+        # Marking stimulus frequency and its harmonics
+    plt.axvline(x=freq, color='red', linestyle=':', dashes=[1, 5], label='1f', zorder=0)
+    plt.axvline(x=freq*2, color='blue', linestyle=':', dashes=[1, 5], label='2f', zorder=0)
+    plt.axvline(x=freq*3, color='green', linestyle=':', dashes=[1, 5], label='3f', zorder=0)
+    plt.ylim(0, 30)
+
+    plt.legend()
+    # Add the figure to the report
+    report.add_figure(figure_snr, f'SNR ({freq} Hz)', section=f'SSVEP All Trials')
+    plt.close()
 
 for i, file in enumerate(SSVEPfiles):
     # Read the raw data
@@ -101,10 +205,33 @@ for i, file in enumerate(SSVEPfiles):
 
     for event_id, freq in freq_mapping.items():
         # Extract epochs for the current frequency
-        epoch = mne.Epochs(raw, events, event_id, event_repeated='merge', tmin=1, tmax=8, baseline=None, verbose='INFO')
+        epoch = mne.Epochs(raw, events, event_id, event_repeated='merge', tmin=2, tmax=7, baseline=None, verbose='INFO')
 
-        spectrum = epoch[f'{event_id}'][0].compute_psd(method='welch', fmin=1, fmax=40)
-        figure = spectrum.plot()
+        spectrum = epoch[f'{event_id}'][0].compute_psd(method='welch', fmin=1, fmax=40, n_overlap=(2561//2))
+
+        # # Sanity check for PSD scaling
+        # psds, freqs = spectrum.get_data(return_freqs=True)
+        # # Average across epochs only not channels
+        # psds_mean = psds_plot.mean(axis=0)
+        # psds_std = psds_plot.std(axis=0)
+
+        # # Plotting
+        # fig = plt.figure()
+        # plt.plot(freqs, psds_mean.T, color='black')  # Converting power to dB
+        # plt.title(f'Mean PSD for {freq} Hz Stimulus')
+        # plt.xlabel('Frequency (Hz)')
+        # plt.ylabel('Power Spectral Density (dB/Hz)')
+        # # plt.fill_between(freqs, psds_mean - psds_std, psds_mean + psds_std, color='black', alpha=0.2)
+        # plt.axvline(x=freq, color='red', linestyle='--', label='1f')
+        # plt.axvline(x=freq * 2, color='blue', linestyle='--', label='2f')
+        # plt.axvline(x=freq * 3, color='green', linestyle='--', label='3f')
+        # plt.legend()
+        # plt.show()
+
+        # report.add_figure(fig, f'SSVEP ({freq} Hz)', section=f'SSVEP Trial {i+1}')
+        # plt.close()
+
+        figure = spectrum.plot(amplitude=True)
 
         psd, freqs = spectrum.get_data(return_freqs=True)
 
@@ -117,11 +244,14 @@ for i, file in enumerate(SSVEPfiles):
         # Add the figure to the report
         report.add_figure(figure, f'SSVEP ({freq} Hz)', section=f'SSVEP Trial {i+1}')
         plt.close()
+
         # Average PSD across epochs (only have one)
         psd_mean = psd.mean(axis=0)
 
         # Compute SNR
         snr = snr_spectrum(psd_mean, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+
+        print("SNR shape: ", snr.shape)
 
         # Average across epochs (only have one)
         snr_mean = snr.mean(axis=0)
@@ -130,7 +260,7 @@ for i, file in enumerate(SSVEPfiles):
         # Plot SNR spectrum with mean and standard deviation
         figure_snr = plt.figure()
         plt.plot(freqs, snr_mean, zorder=2, color='black')  # Plotting the mean SNR
-        plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
+        # plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
 
         plt.title(f'SNR ({freq} Hz)')
         plt.xlabel('Frequency (Hz)')
@@ -140,9 +270,14 @@ for i, file in enumerate(SSVEPfiles):
         plt.axvline(x=freq, color='red', linestyle=':', dashes=[1, 5], label='1f', zorder=0)
         plt.axvline(x=freq*2, color='blue', linestyle=':', dashes=[1, 5], label='2f', zorder=0)
         plt.axvline(x=freq*3, color='green', linestyle=':', dashes=[1, 5], label='3f', zorder=0)
+        plt.ylim(0, 30)
 
         plt.legend()
         # Add the figure to the report
         report.add_figure(figure_snr, f'SNR ({freq} Hz)', section=f'SSVEP Trial {i+1}')
         plt.close()
-report.save(f'./reports/Brian.html', overwrite=True)
+
+report.save(f'./reports/{name}.html', overwrite=True)
+
+
+
