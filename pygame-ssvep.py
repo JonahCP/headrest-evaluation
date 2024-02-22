@@ -1,84 +1,76 @@
-import os
-from random import shuffle
-import sys
-
-from PIL import Image, ImageTk
+from datetime import datetime
+from pandas import DataFrame
 import pygame
+from random import shuffle
 
 
-### Import LOOP packages and functions
-dirP = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-sys.path.append(dirP + '/headrest-evaluation/z1_ref_other/0_lib')
-
-import cnbiloop
-from cnbiloop import BCI, BCI_tid
-
-sys.path.append(dirP + '/ssvep/1_packages')
-from serialCommunication import SerialWriter
-
-def sendTiD(Event_):
-    bci.id_msg_bus.SetEvent(Event_)
-    bci.iDsock_bus.sendall(str.encode(bci.id_serializer_bus.Serialize()))
-
-bci = BCI_tid.BciInterface()
-
+### Define timestamping function
+datetimes = []
+events = []
+def logEvent(event):
+    datetimes.append(datetime.now().strftime('%Y-%m-%d %H.%M.%S.%f')[:-3])
+    events.append(event)
 
 ### Define frequencies, duration, and other experimental constants
 FREQ = [7.5, 8.57, 10, 12] # in Hz
 STIMULUS_DURATION = 8000   # in ms
-REST_DURATION = 15000       # in ms
+REST_DURATION = 15000      # in ms
 
-GREY = (140, 140, 140)
+### Define color and shape constants
+YELLOW = (255, 255, 0)
+BLACK = (0, 0, 0)
+RADIUS = 150
 
 
 ### Set up PyGame window
 pygame.init()
 win = pygame.display.set_mode((0, 0), pygame.FULLSCREEN, vsync=1)
-win.fill(GREY)   # set background color to grey
+win.fill(BLACK)         # set background color to black
 pygame.display.update()
 pygame.display.set_caption('SSVEP')
 pygame.mouse.set_visible(False)
 clock = pygame.time.Clock()
 
-### Set up images
-ch1 = 'images/checker1.png'
-ch2 = 'images/checker2.png'
-imgs = [ch1, ch2]
-
-boards = []
-for i in imgs:
-    img = pygame.image.load(i).convert()
-    boards.append(img)
-
 # Find coordinates to render image
-x, y = win.get_size()
-im_x, im_y = boards[0].get_size()
-x = (x / 2) - (im_x / 2)
-y = (y / 2) - (im_y / 2)
+pos_x, pos_y = win.get_size()
+pos_x //= 2
+pos_y //= 2
 
 ### Begin flickering stimuli
-sendTiD(1)
+logEvent('START')
 
 pygame.time.delay(5000)
 freq_rand = FREQ.copy()
 shuffle(freq_rand)
 for freq in freq_rand:
-    # print("Beginning %.2f Hz" % freq)
     duration = STIMULUS_DURATION
     clock.tick(freq * 2)
 
-    sendTiD(FREQ.index(freq) + 10)
-    i = 0
+    on_screen = False
+    logEvent('%.2f Hz' % freq)
     while duration > 0:
-        win.blit(boards[i], (x, y))
+        if not on_screen:
+            pygame.draw.circle(win, YELLOW, (pos_x, pos_y), RADIUS)
+        else:
+            pygame.draw.circle(win, BLACK, (pos_x, pos_y), RADIUS)
+        on_screen = not on_screen
         pygame.display.update()
-        i = (i + 1) % 2
 
         duration -= clock.tick(freq * 2)
+    
+    if on_screen:
+        pygame.draw.circle(win, BLACK, (pos_x, pos_y), RADIUS)
+        pygame.display.update()
 
-    sendTiD(FREQ.index(freq) + 10)
-    pygame.draw.rect(win, GREY, pygame.Rect(x, y, im_x, im_y))
     pygame.display.update()
     pygame.time.delay(REST_DURATION)
 
-sendTiD(1)
+logEvent('END')
+
+### Convert timestamp lists to CSV file
+timestamps = DataFrame({
+        'datetimes': datetimes,
+        'events': events
+    })
+
+timestamps.to_csv('ssvep_timestamps_' + datetime.now().strftime('%Y-%m-%d_%H.%M.%S.%f')[:-7] + '.csv')
