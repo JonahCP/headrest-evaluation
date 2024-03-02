@@ -38,8 +38,6 @@ ERPfile26 = 'eeg_data/ella/erp/EllaERP8.gdf'
 
 # Define array of ERP Files
 ERPfiles = [ERPfile1, ERPfile2, ERPfile3, ERPfile4, ERPfile5, ERPfile11, ERPfile12, ERPfile13, ERPfile14, ERPfile15, ERPfile16, ERPfile17, ERPfile18, ERPfile19, ERPfile20, ERPfile21, ERPfile22, ERPfile23, ERPfile24, ERPfile25, ERPfile26, ERPfile6, ERPfile7, ERPfile8, ERPfile9, ERPfile10]
-# ERPfiles = [ERPfile2, ERPfile18, ERPfile19, ERPfile25]
-# ERPfiles = [ERPfile1, ERPfile2, ERPfile3, ERPfile4, ERPfile5]
 
 # Define EOG channels
 eog_channels = ['sens13', 'sens14', 'sens15']

@@ -21,7 +21,7 @@ def combine_csvs(timestamp_path, data_path, output_path):
     
     # Read in and prune headrest data file
     data = read_csv(data_path, index_col = False)
-    data.drop(inplace = True, columns = ['delta', 'theta', 'alpha', 'beta1', 'beta2', 'x', 'y', 'z',
+    data.drop(inplace = True, columns = ['raw', 'delta', 'theta', 'alpha', 'beta1', 'beta2', 'x', 'y', 'z',
                 'chnl-1-delta', 'chnl-1-theta', 'chnl-1-alpha', 'chnl-1-beta1', 'chnl-1-beta2',
                 'chnl-2-delta', 'chnl-2-theta', 'chnl-2-alpha', 'chnl-2-beta1', 'chnl-2-beta2',
                 'chnl-3-delta', 'chnl-3-theta', 'chnl-3-alpha', 'chnl-3-beta1', 'chnl-3-beta2'])
@@ -40,7 +40,7 @@ def combine_csvs(timestamp_path, data_path, output_path):
         row += 1
 
     # Insert event into output data set
-    out.loc[len(out.index)] = [event[0], '', '', '', '', '', event[1]]
+    out.loc[len(out.index)] = [event[0], '', '', '', '', event[1]]
 
     # Insert remaining events and relevant data entries to output
     while not events.empty():
@@ -51,14 +51,14 @@ def combine_csvs(timestamp_path, data_path, output_path):
             out.loc[len(out.index)] = data.loc[row]
             row += 1
 
-        out.loc[len(out.index)] = [event[0], '', '', '', '', '', event[1]]
+        out.loc[len(out.index)] = [event[0], '', '', '', '', event[1]]
     
     # Output relevant data into separate CSV file
     out.to_csv(output_path, index = False)
 
 
 # Combine all SSVEP folders (1-8 w/ data and timestamps) into one CSV file
-for i in range(1, 9):
+for i in range(1, 2):
     ssvep_dir = dir + f'ssvep{i}/'
     timestamp_path = glob(ssvep_dir + 'ssvep_timestamps*.csv')[0]
     data_path = glob(ssvep_dir + 'log*.csv')[0]
@@ -71,7 +71,7 @@ for i in range(1, 9):
 
 
 # Combine all ERP folders (1-8 w/ data and timestamps) into one CSV file
-for i in range(1, 9):
+for i in range(1, 2):
     erp_dir = dir + f'erp{i}/'
     timestamp_path = glob(erp_dir + 'erp_timestamps*.csv')[0]
     data_path = glob(erp_dir + 'log*.csv')[0]
