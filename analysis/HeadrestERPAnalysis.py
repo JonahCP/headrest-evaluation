@@ -4,6 +4,7 @@ import mne
 import pandas as pd
 from pandas import DataFrame, read_csv
 import numpy
+import re
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -57,31 +58,47 @@ def format_raw_data_frame(DataFrame, startTime):
     return raw_channel_data
 
 
-ERPfile1 = 'hr_data/Feb23_Carson/erp1_trim.csv'
-ERPfile2 = 'hr_data/Feb23_Carson/erp2_trim.csv'
-ERPfile3 = 'hr_data/Feb23_Carson/erp3_trim.csv'
-ERPfile4 = 'hr_data/Feb23_Carson/erp4_trim.csv'
-ERPfile5 = 'hr_data/Feb23_Carson/erp5_trim.csv'
-ERPfile6 = 'hr_data/Feb23_Carson/erp6_trim.csv'
-ERPfile7 = 'hr_data/Feb23_Carson/erp7_trim.csv'
-ERPfile8 = 'hr_data/Feb23_Carson/erp8_trim.csv'
+def get_trimmed_files():
+    base_directory = 'hr_data'
+    # The line below searches the hr_data directory for other directories (which contain the test data)
+    directories = [f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f))]
 
-TimeStamp1 = 'hr_data/Feb23_Carson/erp1/erp_timestamps_2024-02-23_10.39.13.csv'
-TimeStamp2 = 'hr_data/Feb23_Carson/erp2/erp_timestamps_2024-02-23_10.42.25.csv'
-TimeStamp3 = 'hr_data/Feb23_Carson/erp3/erp_timestamps_2024-02-23_10.45.42.csv'
-TimeStamp4 = 'hr_data/Feb23_Carson/erp4/erp_timestamps_2024-02-23_10.49.20.csv'
-TimeStamp5 = 'hr_data/Feb23_Carson/erp5/erp_timestamps_2024-02-23_11.08.43.csv'
-TimeStamp6 = 'hr_data/Feb23_Carson/erp6/erp_timestamps_2024-02-23_11.12.04.csv'
-TimeStamp7 = 'hr_data/Feb23_Carson/erp7/erp_timestamps_2024-02-23_11.15.32.csv'
-TimeStamp8 = 'hr_data/Feb23_Carson/erp8/erp_timestamps_2024-02-23_11.18.38.csv'
+    files = []
 
-ERPFiles = [ERPfile1, ERPfile2, ERPfile3, ERPfile4, ERPfile5, ERPfile6, ERPfile7, ERPfile8]
-TimeStamps = [TimeStamp1, TimeStamp2, TimeStamp3, TimeStamp4, TimeStamp5, TimeStamp6, TimeStamp7, TimeStamp8]
+    for directory in directories:
+        for i in range(1, 9):
+            file_path = f'{base_directory}/{directory}/erp{i}_trim.csv'
+            files.append(file_path)
 
-FileMatrix = np.matrix([
-    [ERPfile1, ERPfile2, ERPfile3, ERPfile4, ERPfile5, ERPfile6, ERPfile7, ERPfile8],
-    [TimeStamp1, TimeStamp2, TimeStamp3, TimeStamp4, TimeStamp5, TimeStamp6, TimeStamp7, TimeStamp8]
-])
+    return files
+
+
+def get_timestamps():
+    base_directory = 'hr_data'
+    # The line below searches the hr_data directory for other directories (which contain the test data)
+    directories = [f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f))]
+
+    files = []
+
+    for directory in directories:
+        subject_base_directory = f'{base_directory}/{directory}'
+        # Does the same as before except only grabs the erp directories for a single subject
+        erp_directories = [f for f in os.listdir(subject_base_directory)
+                           if os.path.isdir(os.path.join(subject_base_directory, f)) and 'erp' in f]
+
+        for erp_directory in erp_directories:
+            erp_directory_path = f'{base_directory}/{directory}/{erp_directory}'
+            erp_timestamp = [f for f in os.listdir(erp_directory_path) if re.match(r'erp_timestamps_.*\.csv', f)][0]
+
+            files.append(f'{base_directory}/{directory}/{erp_directory}/{erp_timestamp}')
+
+    return files
+
+
+TrimmedERPFiles = get_trimmed_files()
+ERPTimestamps = get_timestamps()
+
+FileMatrix = [TrimmedERPFiles, ERPTimestamps]
 
 FileDataFrame = pd.DataFrame(FileMatrix)
 
@@ -92,7 +109,7 @@ list_of_avg_target_stimuli_across_all_trials = []
 num_of_targets = 0
 num_of_base = 0
 
-for i in range(0, 8):
+for i in range(FileDataFrame.columns.size):
     ERPDataFrame = read_csv(FileDataFrame[i].iloc[0])
     ERPEventsDataFrame = read_csv(FileDataFrame[i].iloc[1])
 
@@ -126,7 +143,11 @@ for i in range(0, 8):
     # Begin analysis
     raw.pick_channels(ch_names)
 
-    raw.filter(.1, 30, fir_design='firwin')
+    # raw.compute_psd().plot()
+
+    raw.filter(5, 30, fir_design='firwin')
+
+    # raw.compute_psd().plot()
 
     # Define events based on your experimental paradigm
     events, event_id = mne.events_from_annotations(raw)
@@ -142,7 +163,7 @@ for i in range(0, 8):
     target_epochs = None
 
     for eid in event_ids_of_interest:
-        final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75, reject={'eeg': 950}, detrend=1,
+        final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75, reject={'eeg': 8000},
                                   preload=True, event_repeated='merge', picks=picks)
 
         # final_epochs.plot(picks=picks, events=events, scalings=scalings)
@@ -160,8 +181,8 @@ for i in range(0, 8):
             target_epochs = final_epochs.copy()
             num_of_targets += target_epochs.events.shape[0]
 
-    # base_epochs.plot(picks=picks, events=events, scalings=scalings)
-    # target_epochs.plot(picks=picks, events=events, scalings=scalings)
+    # base_epochs.plot(picks=picks, events=events, scalings='auto')
+    # target_epochs.plot(picks=picks, events=events, scalings='auto')
 
     # The following are evoked objects in mne
     if base_epochs is not None:
