@@ -1,5 +1,4 @@
 import os
-
 import mne
 import pandas as pd
 from pandas import DataFrame, read_csv
@@ -7,6 +6,7 @@ import numpy
 import re
 import numpy as np
 from matplotlib import pyplot as plt
+from autoreject import get_rejection_threshold
 
 
 def format_events_frame(EventsDataFrame):
@@ -149,6 +149,21 @@ for i in range(FileDataFrame.columns.size):
 
     # raw.compute_psd().plot()
 
+    # # Use the same settings as when calling e.g., `raw.filter()`
+    # fir_coefs = mne.filter.create_filter(
+    #     data=None,  # data is only used for sanity checking, not strictly needed
+    #     sfreq=206,  # sfreq of your data in Hz
+    #     l_freq=5,
+    #     h_freq=30,  # assuming a lowpass of 40 Hz
+    #     method='fir',
+    #     fir_window='hamming',
+    #     fir_design='firwin',
+    #     verbose=True)
+    #
+    # # See the printed log for the transition bandwidth and filter length.
+    # # Alternatively, get the filter length through:
+    # filter_length = fir_coefs.shape[0]
+
     # Define events based on your experimental paradigm
     events, event_id = mne.events_from_annotations(raw)
 
@@ -162,17 +177,25 @@ for i in range(FileDataFrame.columns.size):
     base_epochs = None
     target_epochs = None
 
+    # Define rejection thresholds for each channel
+    # rejection_thresholds = {'Channel 1': 5000, 'Channel 2': 8000, 'Channel 3': 8000}
+
     for eid in event_ids_of_interest:
-        final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75, reject={'eeg': 8000},
-                                  preload=True, event_repeated='merge', picks=picks)
+        final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75,
+                                  preload=True, event_repeated='merge')
+
+        reject = get_rejection_threshold(final_epochs)['eeg']
+
+        final_epochs.drop_bad(reject={'eeg': reject})
+
+        # epochs_specific_channel = final_epochs.pick_channels(['Channel 1'])
+        # epochs_specific_channel.plot()
 
         # final_epochs.plot(picks=picks, events=events, scalings=scalings)
         if final_epochs.__len__() == 0:
             break
 
         final_epochs = final_epochs.apply_baseline(baseline=(-.25, 0))
-
-        # final_epochs.plot(picks=picks, events=events, scalings='auto')
 
         if eid == 2:
             base_epochs = final_epochs.copy()
@@ -254,7 +277,10 @@ for subplot_idx in range(num_subplots):
         # axes[idx].invert_yaxis()
 
         # Set y-axis limits
-        axes[idx].set_ylim(min_y, max_y)
+        # axes[idx].set_ylim(min_y, max_y)
+
+        # Set x-axis limits to 0 to 500 milliseconds
+        axes[idx].set_xlim(0, 500)
 
         # Add legend
         axes[idx].legend()
