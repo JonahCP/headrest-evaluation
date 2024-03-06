@@ -9,8 +9,8 @@ matplotlib.use('Agg')
 
 # Specify SSVEP data directory
 # E.g. './data/carson/ssvep/*.gdf'
-name = 'Average'
-dir = './data/jonah/ssvep/*.gdf'
+name = 'Jason2'
+dir = f'./eeg_data/{name}/ssvep/*.gdf'
 
 # Find and list SSVEP data files
 SSVEPfiles = glob.glob(dir)
@@ -95,6 +95,9 @@ for raw in raw_alls:
 
 raw_all = mne.concatenate_raws(raw_alls)
 events, _ = mne.events_from_annotations(raw_all)
+
+print("Events:", events)
+
 all_epochs = mne.Epochs(raw_all, events, event_id=list(freq_mapping.keys()), event_repeated='merge', tmin=2, tmax=7, baseline=None, verbose='INFO')
 
 # Only keep every other epoch
@@ -159,10 +162,10 @@ for i, file in enumerate(SSVEPfiles):
     # Pick only the EEG channels of interest
     raw.pick_channels(eeg_channels)
 
-    # Apply notch filter of 60 Hz
-    raw.notch_filter(60, verbose='INFO')
-
     events, _ = mne.events_from_annotations(raw)
+
+    # Save the raw data plot to the report
+    report.add_raw(raw, title=f'Raw Data Trial {i+1}', scalings={'eeg': 225 * 1e-1})
 
     for event_id, freq in freq_mapping.items():
         # Extract epochs for the current frequency
@@ -214,4 +217,4 @@ for i, file in enumerate(SSVEPfiles):
         report.add_figure(figure_snr, f'SNR ({freq} Hz)', section=f'SSVEP Trial {i+1}')
         plt.close()
 
-report.save(f'./{name}.html', overwrite=True)
+report.save(f'./reports/{name}_3_6.html', overwrite=True)
