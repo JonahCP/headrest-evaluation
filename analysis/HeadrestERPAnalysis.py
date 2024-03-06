@@ -119,7 +119,7 @@ for i in range(FileDataFrame.columns.size):
     start_time = events_info['datetimes'].iloc[0]
 
     # Pass in the ERPDataFrame and the start time of the trial to have an accurate start time for both
-    raw = format_raw_data_frame(ERPDataFrame, start_time)
+    raw_array = format_raw_data_frame(ERPDataFrame, start_time)
 
     ch_names = ['Channel 1', 'Channel 2', 'Channel 3']
 
@@ -129,7 +129,7 @@ for i in range(FileDataFrame.columns.size):
 
     info = mne.create_info(ch_names=ch_names, ch_types=ch_types, sfreq=sampling_frequency)
 
-    raw = mne.io.RawArray(raw[:3, :], info).set_meas_date(start_time)
+    raw = mne.io.RawArray(raw_array[:3, :], info).set_meas_date(start_time)
 
     onset_array = events_info['seconds_since_start'].values
 
@@ -145,24 +145,27 @@ for i in range(FileDataFrame.columns.size):
 
     # raw.compute_psd().plot()
 
-    raw.filter(5, 30, fir_design='firwin')
+    raw.filter(5, 30, fir_design='firwin', fir_window='hamming')
 
     # raw.compute_psd().plot()
 
-    # # Use the same settings as when calling e.g., `raw.filter()`
-    # fir_coefs = mne.filter.create_filter(
-    #     data=None,  # data is only used for sanity checking, not strictly needed
-    #     sfreq=206,  # sfreq of your data in Hz
-    #     l_freq=5,
-    #     h_freq=30,  # assuming a lowpass of 40 Hz
-    #     method='fir',
-    #     fir_window='hamming',
-    #     fir_design='firwin',
-    #     verbose=True)
-    #
-    # # See the printed log for the transition bandwidth and filter length.
-    # # Alternatively, get the filter length through:
-    # filter_length = fir_coefs.shape[0]
+    # Creating filter
+    fir_coefs = mne.filter.create_filter(
+        data=raw.get_data(),  # data is only used for sanity checking, not strictly needed
+        sfreq=206,  # sfreq of your data in Hz
+        l_freq=5,
+        h_freq=30,  # assuming a lowpass of 40 Hz
+        # filter_length=10001,
+        method='fir',
+        fir_window='hamming',
+        fir_design='firwin',
+        verbose=True)
+
+    # See the printed log for the transition bandwidth and filter length.
+    # Alternatively, get the filter length through:
+    filter_length = fir_coefs.shape[0]
+
+    # mne.viz.plot_filter(fir_coefs, 206)
 
     # Define events based on your experimental paradigm
     events, event_id = mne.events_from_annotations(raw)
@@ -269,7 +272,7 @@ for subplot_idx in range(num_subplots):
         axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(f'Averaged Epochs for {ch_name}')
+        axes[idx].set_title(f'Grand Averaged Epochs for {ch_name}')
         axes[idx].set_xlabel('Time (ms)')
         axes[idx].set_ylabel('Amplitude (uV)')
 
@@ -280,7 +283,7 @@ for subplot_idx in range(num_subplots):
         # axes[idx].set_ylim(min_y, max_y)
 
         # Set x-axis limits to 0 to 500 milliseconds
-        axes[idx].set_xlim(0, 500)
+        # axes[idx].set_xlim(0, 500)
 
         # Add legend
         axes[idx].legend()
