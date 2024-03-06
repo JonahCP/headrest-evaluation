@@ -73,7 +73,7 @@ for i, file in enumerate(ERPfiles):
 
     raw.pick_channels(channels_of_interests)
 
-    # raw.compute_psd().plot()
+    raw.compute_psd().plot()
 
     raw.filter(.1, 30, fir_design='firwin')
 
@@ -81,7 +81,7 @@ for i, file in enumerate(ERPfiles):
     # raw.plot_sensors(show_names=True)
     # plt.show()
 
-    # raw.compute_psd().plot()
+    raw.compute_psd().plot()
 
     # Define events based on your experimental paradigm
     events, event_id = mne.events_from_annotations(raw)
