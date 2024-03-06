@@ -4,6 +4,7 @@ import mne
 import numpy
 import numpy as np
 from matplotlib import pyplot as plt
+from autoreject import get_rejection_threshold
 
 # Load the EEG data from the .gdf file
 ERPfile1 = 'eeg_data/carson/erp/CarsonERP1.gdf'
@@ -102,8 +103,14 @@ for i, file in enumerate(ERPfiles):
     target_epochs = None
 
     for eid in event_ids_of_interest:
-        final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75, reject={'eeg': 150, 'eog': 75}, detrend=1,
+        final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75, reject={}, detrend=1,
                                   preload=True, event_repeated='merge', picks=picks)
+        # final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75, reject={'eeg': 150, 'eog': 75}, detrend=1,
+        #                           preload=True, event_repeated='merge', picks=picks)
+
+        reject = get_rejection_threshold(final_epochs)
+
+        final_epochs.drop_bad(reject={'eeg': reject['eeg'], 'eog': reject['eog']})
 
         # final_epochs.plot_drop_log()
         # final_epochs.plot(picks=picks, events=events, scalings=scalings)
