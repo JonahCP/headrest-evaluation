@@ -53,7 +53,12 @@ def format_raw_data_frame(DataFrame, startTime):
             DataFrame['datetime'] - startTime).dt.total_seconds()
 
     # Get raw channel data
-    raw_channel_data = DataFrame[['chnl-1-raw', 'chnl-2-raw', 'chnl-3-raw', 'datetime', 'seconds_since_start']].values.T
+    # raw_channel_data = DataFrame[['chnl-1-raw', 'chnl-2-raw', 'chnl-3-raw', 'datetime', 'seconds_since_start']].values.T
+    # raw_channel_data = DataFrame[['chnl-1-delta', 'chnl-2-delta', 'chnl-3-delta', 'datetime', 'seconds_since_start']].values.T
+    raw_channel_data = DataFrame[['chnl-1-theta', 'chnl-2-theta', 'chnl-3-theta', 'datetime', 'seconds_since_start']].values.T
+    # raw_channel_data = DataFrame[['chnl-1-alpha', 'chnl-2-alpha', 'chnl-3-alpha', 'datetime', 'seconds_since_start']].values.T
+    # raw_channel_data = DataFrame[['chnl-1-beta1', 'chnl-2-beta1', 'chnl-3-beta1', 'datetime', 'seconds_since_start']].values.T
+    # raw_channel_data = DataFrame[['chnl-1-beta2', 'chnl-2-beta2', 'chnl-3-beta2', 'datetime', 'seconds_since_start']].values.T
 
     return raw_channel_data
 
@@ -67,7 +72,8 @@ def get_trimmed_files():
 
     for directory in directories:
         for i in range(1, 9):
-            file_path = f'{base_directory}/{directory}/erp{i}_trim.csv'
+            # file_path = f'{base_directory}/{directory}/erp{i}_trim.csv'
+            file_path = f'{base_directory}/{directory}/erp{i}_trim_components.csv'
             files.append(file_path)
 
     return files
@@ -143,9 +149,13 @@ for i in range(FileDataFrame.columns.size):
     # Begin analysis
     raw.pick_channels(ch_names)
 
+    # raw.plot(scalings='auto')
+
     # raw.compute_psd().plot()
 
-    raw.filter(5, 30, fir_design='firwin', fir_window='hamming')
+    raw.filter(.1, 30, fir_design='firwin', fir_window='hamming')
+
+    # raw.plot(scalings='auto')
 
     # raw.compute_psd().plot()
 
@@ -198,7 +208,7 @@ for i in range(FileDataFrame.columns.size):
         if final_epochs.__len__() == 0:
             break
 
-        final_epochs = final_epochs.apply_baseline(baseline=(-.25, 0))
+        final_epochs = final_epochs.apply_baseline(baseline=(-0.25, 0))
 
         if eid == 2:
             base_epochs = final_epochs.copy()
@@ -272,7 +282,7 @@ for subplot_idx in range(num_subplots):
         axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(f'Grand Averaged Epochs for {ch_name}')
+        axes[idx].set_title(f'Beta2 Epochs for {ch_name}')
         axes[idx].set_xlabel('Time (ms)')
         axes[idx].set_ylabel('Amplitude (uV)')
 
