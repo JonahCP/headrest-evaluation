@@ -5,7 +5,7 @@ from queue import Queue
 from time import time
 
 # Specify the folder of interest to trim data
-folder_name = 'Participant3'
+folder_name = 'participantx'
 
 dir = f"./{folder_name}/"
 
@@ -64,7 +64,7 @@ def trim_csv(timestamp_path, data_path, output_path):
 
 
 # Trim all ERP folders (1-8 w/ data and timestamps) into one CSV file
-for i in range(1, 9):
+for i in range(1, 5):
     erp_dir = dir + f'erp{i}/'
     timestamp_path = glob(erp_dir + 'erp_timestamps*.csv')[0]
     data_path = glob(erp_dir + 'log*.csv')[0]
