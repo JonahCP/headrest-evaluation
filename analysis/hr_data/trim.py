@@ -5,7 +5,7 @@ from queue import Queue
 from time import time
 
 # Specify the folder of interest to trim data
-folder_name = 'Feb27_Robert'
+folder_name = 'Participant4'
 
 dir = f"./{folder_name}/"
 
@@ -49,27 +49,27 @@ def trim_csv(timestamp_path, data_path, output_path):
     out.to_csv(output_path, index = False)
 
 
-# Trim all SSVEP folders (1-8 w/ data and timestamps) into one CSV file
-for i in range(1, 9):
-    ssvep_dir = dir + f'ssvep{i}/'
-    timestamp_path = glob(ssvep_dir + 'ssvep_timestamps*.csv')[0]
-    data_path = glob(ssvep_dir + 'log*.csv')[0]
-    output_path = dir + f'ssvep{i}_trim.csv'
-
-    print(f'Trimming ssvep{i}...')
-    start_time = time()
-    trim_csv(timestamp_path, data_path, output_path)
-    print('CSV files trimmed! Elapsed time: %.2f s\n' % (time() - start_time))
-
-
-# # Trim all ERP folders (1-8 w/ data and timestamps) into one CSV file
+# # Trim all SSVEP folders (1-8 w/ data and timestamps) into one CSV file
 # for i in range(1, 9):
-#     erp_dir = dir + f'erp{i}/'
-#     timestamp_path = glob(erp_dir + 'erp_timestamps*.csv')[0]
-#     data_path = glob(erp_dir + 'log*.csv')[0]
-#     output_path = dir + f'erp{i}_trim.csv'
-
-#     print(f'Trimming erp{i}...')
+#     ssvep_dir = dir + f'ssvep{i}/'
+#     timestamp_path = glob(ssvep_dir + 'ssvep_timestamps*.csv')[0]
+#     data_path = glob(ssvep_dir + 'log*.csv')[0]
+#     output_path = dir + f'ssvep{i}_trim.csv'
+#
+#     print(f'Trimming ssvep{i}...')
 #     start_time = time()
 #     trim_csv(timestamp_path, data_path, output_path)
 #     print('CSV files trimmed! Elapsed time: %.2f s\n' % (time() - start_time))
+
+
+# Trim all ERP folders (1-8 w/ data and timestamps) into one CSV file
+for i in range(1, 9):
+    erp_dir = dir + f'erp{i}/'
+    timestamp_path = glob(erp_dir + 'erp_timestamps*.csv')[0]
+    data_path = glob(erp_dir + 'log*.csv')[0]
+    output_path = dir + f'erp{i}_trim.csv'
+
+    print(f'Trimming erp{i}...')
+    start_time = time()
+    trim_csv(timestamp_path, data_path, output_path)
+    print('CSV files trimmed! Elapsed time: %.2f s\n' % (time() - start_time))

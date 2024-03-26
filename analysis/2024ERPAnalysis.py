@@ -39,6 +39,7 @@ ERPfile26 = 'eeg_data/ella/erp/EllaERP8.gdf'
 
 # Define array of ERP Files
 ERPfiles = [ERPfile1, ERPfile2, ERPfile3, ERPfile4, ERPfile5, ERPfile11, ERPfile12, ERPfile13, ERPfile14, ERPfile15, ERPfile16, ERPfile17, ERPfile18, ERPfile19, ERPfile20, ERPfile21, ERPfile22, ERPfile23, ERPfile24, ERPfile25, ERPfile26, ERPfile6, ERPfile7, ERPfile8, ERPfile9, ERPfile10]
+# ERPfiles = [ERPfile19, ERPfile20, ERPfile21, ERPfile22, ERPfile23, ERPfile24, ERPfile25, ERPfile26]
 
 # Define EOG channels
 eog_channels = ['sens13', 'sens14', 'sens15']
@@ -60,6 +61,8 @@ for i, file in enumerate(ERPfiles):
 
     raw = mne.io.read_raw_gdf(file, preload=True, eog=eog_channels).set_eeg_reference(ref_channels=['O1', 'O2'])
 
+    # raw = raw.resample(sfreq=206)
+
     # raw.compute_psd(method='welch').plot()
 
     # This is just added in when including Brian's files
@@ -73,7 +76,7 @@ for i, file in enumerate(ERPfiles):
 
     raw.pick_channels(channels_of_interests)
 
-    raw.compute_psd().plot()
+    # raw.compute_psd().plot()
 
     raw.filter(.1, 30, fir_design='firwin')
 
@@ -81,7 +84,7 @@ for i, file in enumerate(ERPfiles):
     # raw.plot_sensors(show_names=True)
     # plt.show()
 
-    raw.compute_psd().plot()
+    # raw.compute_psd().plot()
 
     # Define events based on your experimental paradigm
     events, event_id = mne.events_from_annotations(raw)

@@ -25,11 +25,10 @@ def format_events_frame(EventsDataFrame):
     conditions = [
         (EventsDataFrame['events'] == 'START') | (EventsDataFrame['events'] == 'END'),
         (EventsDataFrame['events'] == 'STANDARD'),
-        (EventsDataFrame['events'] == 'TARGET'),
-        (EventsDataFrame['events'] == 'KEY PRESS')
+        (EventsDataFrame['events'] == 'TARGET')
     ]
 
-    values = [1, 10, 20, 30]
+    values = [1, 10, 20]
 
     # Adds the TID next to the events
     EventsDataFrame['TID'] = np.select(conditions, values, default=np.nan)
@@ -53,9 +52,9 @@ def format_raw_data_frame(DataFrame, startTime):
             DataFrame['datetime'] - startTime).dt.total_seconds()
 
     # Get raw channel data
-    # raw_channel_data = DataFrame[['chnl-1-raw', 'chnl-2-raw', 'chnl-3-raw', 'datetime', 'seconds_since_start']].values.T
+    raw_channel_data = DataFrame[['chnl-1-raw', 'chnl-2-raw', 'chnl-3-raw', 'datetime', 'seconds_since_start']].values.T
     # raw_channel_data = DataFrame[['chnl-1-delta', 'chnl-2-delta', 'chnl-3-delta', 'datetime', 'seconds_since_start']].values.T
-    raw_channel_data = DataFrame[['chnl-1-theta', 'chnl-2-theta', 'chnl-3-theta', 'datetime', 'seconds_since_start']].values.T
+    # raw_channel_data = DataFrame[['chnl-1-theta', 'chnl-2-theta', 'chnl-3-theta', 'datetime', 'seconds_since_start']].values.T
     # raw_channel_data = DataFrame[['chnl-1-alpha', 'chnl-2-alpha', 'chnl-3-alpha', 'datetime', 'seconds_since_start']].values.T
     # raw_channel_data = DataFrame[['chnl-1-beta1', 'chnl-2-beta1', 'chnl-3-beta1', 'datetime', 'seconds_since_start']].values.T
     # raw_channel_data = DataFrame[['chnl-1-beta2', 'chnl-2-beta2', 'chnl-3-beta2', 'datetime', 'seconds_since_start']].values.T
@@ -73,7 +72,7 @@ def get_trimmed_files():
     for directory in directories:
         for i in range(1, 9):
             # file_path = f'{base_directory}/{directory}/erp{i}_trim.csv'
-            file_path = f'{base_directory}/{directory}/erp{i}_trim_components.csv'
+            file_path = f'{base_directory}/{directory}/erp{i}_trim.csv'
             files.append(file_path)
 
     return files
@@ -153,35 +152,23 @@ for i in range(FileDataFrame.columns.size):
 
     # raw.compute_psd().plot()
 
-    raw.filter(.1, 30, fir_design='firwin', fir_window='hamming')
 
-    # raw.plot(scalings='auto')
+    # Use 5 to 11 to capture Theta + Alpha bands
+    # raw.filter(5, 15, fir_design='firwin', fir_window='hamming')
+    raw.filter(5, 30, fir_design='firwin', fir_window='hamming')
+
 
     # raw.compute_psd().plot()
-
-    # Creating filter
-    fir_coefs = mne.filter.create_filter(
-        data=raw.get_data(),  # data is only used for sanity checking, not strictly needed
-        sfreq=206,  # sfreq of your data in Hz
-        l_freq=5,
-        h_freq=30,  # assuming a lowpass of 40 Hz
-        # filter_length=10001,
-        method='fir',
-        fir_window='hamming',
-        fir_design='firwin',
-        verbose=True)
-
-    # See the printed log for the transition bandwidth and filter length.
-    # Alternatively, get the filter length through:
-    filter_length = fir_coefs.shape[0]
-
-    # mne.viz.plot_filter(fir_coefs, 206)
 
     # Define events based on your experimental paradigm
     events, event_id = mne.events_from_annotations(raw)
 
     # Where 2 is base and 3 is target stimuli
-    event_ids_of_interest = [2, 3]
+    if i > 31:
+        event_ids_of_interest = [2, 3]
+    else:
+        # Where 3 is base and 4 is target stimuli
+        event_ids_of_interest = [3, 4]
 
     # Picks are just defining what type of channels we are using, in this case EEG and EOG
     picks = mne.pick_types(raw.info, eeg=True)
@@ -197,12 +184,15 @@ for i in range(FileDataFrame.columns.size):
         final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75,
                                   preload=True, event_repeated='merge')
 
+        # final_epochs.plot(scalings='auto')
+
         reject = get_rejection_threshold(final_epochs)['eeg']
+
+        # final_epochs.plot(scalings='auto')
 
         final_epochs.drop_bad(reject={'eeg': reject})
 
-        # epochs_specific_channel = final_epochs.pick_channels(['Channel 1'])
-        # epochs_specific_channel.plot()
+        # final_epochs.plot(scalings='auto')
 
         # final_epochs.plot(picks=picks, events=events, scalings=scalings)
         if final_epochs.__len__() == 0:
@@ -210,10 +200,11 @@ for i in range(FileDataFrame.columns.size):
 
         final_epochs = final_epochs.apply_baseline(baseline=(-0.25, 0))
 
-        if eid == 2:
+        if eid == event_ids_of_interest[0]:
             base_epochs = final_epochs.copy()
             num_of_base += base_epochs.events.shape[0]
         else:
+            # final_epochs.plot(scalings='auto')
             target_epochs = final_epochs.copy()
             num_of_targets += target_epochs.events.shape[0]
 
@@ -282,7 +273,7 @@ for subplot_idx in range(num_subplots):
         axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(f'Beta2 Epochs for {ch_name}')
+        axes[idx].set_title(f'Theta + Alpha All Participants Grand Averaged Epochs for {ch_name}')
         axes[idx].set_xlabel('Time (ms)')
         axes[idx].set_ylabel('Amplitude (uV)')
 
@@ -290,10 +281,10 @@ for subplot_idx in range(num_subplots):
         # axes[idx].invert_yaxis()
 
         # Set y-axis limits
-        # axes[idx].set_ylim(min_y, max_y)
+        axes[idx].set_ylim(-15, 15)
 
-        # Set x-axis limits to 0 to 500 milliseconds
-        # axes[idx].set_xlim(0, 500)
+        # Set x-axis limits to 0 to 600 milliseconds
+        axes[idx].set_xlim(0, 500)
 
         # Add legend
         axes[idx].legend()
