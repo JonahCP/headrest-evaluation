@@ -154,7 +154,8 @@ for i in range(FileDataFrame.columns.size):
 
 
     # Use 5 to 11 to capture Theta + Alpha bands
-    # raw.filter(5, 15, fir_design='firwin', fir_window='hamming')
+    # raw.filter(5, 11, fir_design='firwin', fir_window='hamming')
+    # raw.filter(5, 7, fir_design='firwin', fir_window='hamming')
     raw.filter(5, 30, fir_design='firwin', fir_window='hamming')
 
 
@@ -164,11 +165,12 @@ for i in range(FileDataFrame.columns.size):
     events, event_id = mne.events_from_annotations(raw)
 
     # Where 2 is base and 3 is target stimuli
-    if i > 31:
+    if 31 < i < 48:
         event_ids_of_interest = [2, 3]
     else:
         # Where 3 is base and 4 is target stimuli
         event_ids_of_interest = [3, 4]
+        # event_ids_of_interest = [2, 3]
 
     # Picks are just defining what type of channels we are using, in this case EEG and EOG
     picks = mne.pick_types(raw.info, eeg=True)
@@ -191,6 +193,19 @@ for i in range(FileDataFrame.columns.size):
         # final_epochs.plot(scalings='auto')
 
         final_epochs.drop_bad(reject={'eeg': reject})
+
+        # Get drop log
+        # drop_log = final_epochs.drop_log
+
+        # Plot all epochs
+        # final_epochs.plot(scalings='auto', n_epochs=5)  # Plot a subset of epochs for visualization
+
+        # Plot the dropped epochs
+        # for i, d in enumerate(drop_log):
+        #     if d and eid == 4:
+        #         if d[0] != "IGNORED":
+        #             print(f"Dropped epochs for event index {i}:")
+        #             final_epochs[4].plot(scalings='auto')
 
         # final_epochs.plot(scalings='auto')
 
@@ -267,13 +282,13 @@ for subplot_idx in range(num_subplots):
         # Add vertical lines at specific time points
         axes[idx].axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
         axes[idx].axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
-        # axes[idx].axvline(x=430, color='green', linestyle='--', label='Vertical Line at 430ms')
+        axes[idx].axvline(x=415, color='orange', linestyle='--', label='Avg Reaction Time')
 
         # Add a horizontal line at y=0
         axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(f'Theta + Alpha All Participants Grand Averaged Epochs for {ch_name}')
+        axes[idx].set_title(f'All Participants Grand Averaged Epochs for {ch_name} (Targets:{num_of_targets}, Base:{num_of_base})')
         axes[idx].set_xlabel('Time (ms)')
         axes[idx].set_ylabel('Amplitude (uV)')
 
@@ -281,10 +296,10 @@ for subplot_idx in range(num_subplots):
         # axes[idx].invert_yaxis()
 
         # Set y-axis limits
-        axes[idx].set_ylim(-15, 15)
+        axes[idx].set_ylim(min_y, max_y)
 
         # Set x-axis limits to 0 to 600 milliseconds
-        axes[idx].set_xlim(0, 500)
+        # axes[idx].set_xlim(0, 600)
 
         # Add legend
         axes[idx].legend()
