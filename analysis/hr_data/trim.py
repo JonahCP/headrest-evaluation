@@ -5,7 +5,7 @@ from queue import Queue
 from time import time
 
 # Specify the folder of interest to trim data
-folder_name = 'participant9'
+folder_name = 'participant17'
 
 dir = f"./{folder_name}/"
 
