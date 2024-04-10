@@ -157,17 +157,13 @@ def compute_snr_graph(snr, freqs, freq):
     # Generate a list of colors from the colormap
     colors = [cmap(i) for i in np.linspace(0, 1, num_channels)]
 
-    # Plot each channel with a color from the gradient
-    for channel in range(num_channels):
-        plt.plot(freqs, snr_channel_mean[channel, :], color=colors[channel], linewidth=0.5)
-
-    # plt.plot(freqs, channel_1, zorder=1, color='blue', linewidth=0.5, label='Channel 1')
-    # plt.plot(freqs, channel_2, zorder=1, color='green', linewidth=0.5, label='Channel 2')
-    # plt.plot(freqs, channel_3, zorder=1, color='red', linewidth=0.5, label='Channel 3')
+    # # Plot each channel with a color from the gradient
+    # for channel in range(num_channels):
+    #     plt.plot(freqs, snr_channel_mean[channel, :], color=colors[channel], linewidth=0.5)
 
     # Plotting the mean SNR
     plt.plot(freqs, snr_mean, zorder=3, color='black', linewidth=2, label='Average SNR')  
-    # plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
+    plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
 
     plt.title(f'SNR ({freq} Hz)')
     plt.xlabel('Frequency (Hz)')
@@ -185,22 +181,21 @@ def compute_snr_graph(snr, freqs, freq):
 
 def create_snr_bar_graph(snr_values, freqs, name): 
     color_mapping = {
-    7.5: 'darkblue',
-    8.57: 'darkgreen',
-    10: 'darkred',
-    12: 'darkorange',
-    15: 'mediumblue',
-    17.14: 'green',
-    20: 'firebrick',
-    22.5: 'blue',
-    24: 'orange',
-    25.71: 'seagreen',
+    7.5: 'royalblue',
+    8.57: 'limegreen',
+    10: 'red',
+    12: 'darkviolet',
+    15: 'royalblue',
+    17.14: 'limegreen',
+    20: 'red',
+    22.5: 'royalblue',
+    24: 'darkviolet',
+    25.71: 'limegreen',
     30: 'red',
-    36: 'gold'
+    36: 'darkviolet'
     }
 
     freq_plot = [7.5, 8.57, 10, 12, 15, 17.14, 20, 22.5, 24, 25.71, 30, 36]
-    # freq_plot = [7.5, 8.57, 10, 12, 15, 17.14, 20, 22.5, 24]
     stim_freqs = [7.5, 8.57, 10, 12]
 
     fig, ax = plt.subplots()
@@ -259,7 +254,7 @@ ssvep_files = find_ssvep_files(base_dir, subject_name, folders=['ssvep'])
 
 # All near occipital region
 eeg_channels = [
-    'P3', 'PZ', 'P4', 'POZ', 'O1', 'OZ', 'O2'
+    'PZ', 'POZ', 'O1', 'OZ', 'O2'
 ]
 
 eog_channels = ['sens13', 'sens14', 'sens15']
@@ -356,18 +351,18 @@ for event_id, freq in freq_mapping.items():
     report.add_figure(figure_psd, f'PSD ({freq} Hz)', section='All Participants All Trials')
     plt.close()
 
-    snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-    snr_values.append(snr)
-    figure_snr = compute_snr_graph(snr, freqs, freq)
+#     snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+#     snr_values.append(snr)
+#     figure_snr = compute_snr_graph(snr, freqs, freq)
 
-    report.add_figure(figure_snr, f'SNR ({freq} Hz)', section='All Participants All Trials')
-    plt.close()
+#     report.add_figure(figure_snr, f'SNR ({freq} Hz)', section='All Participants All Trials')
+#     plt.close()
 
-try: # Try statement is used when plotting dropped trials
-    fig = create_snr_bar_graph(snr_values, freqs, name)
-    report.add_figure(fig, 'Average SNR at target frequencies', section='All Participants All Trials')
-except:
-    print("No Dropped Trials")
+# try: # Try statement is used when plotting dropped trials
+#     fig = create_snr_bar_graph(snr_values, freqs, name)
+#     report.add_figure(fig, 'Average SNR at target frequencies', section='All Participants All Trials')
+# except:
+#     print("No Dropped Trials")
 
 # Compute PSD and SNR for each participant
 for name, raws in participant_data.items():
@@ -433,16 +428,16 @@ for name, raws in participant_data.items():
         report.add_figure(figure_psd, f'Average PSD ({freq} Hz)', section=f'{name} All Trials')
         plt.close()
 
-        # Compute SNR
-        snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-        snr_values.append(snr)
-        figure_snr = compute_snr_graph(snr, freqs, freq)
+        # # Compute SNR
+        # snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+        # snr_values.append(snr)
+        # figure_snr = compute_snr_graph(snr, freqs, freq)
 
-        # Add the figure to the report
-        report.add_figure(figure_snr, f'Average SNR ({freq} Hz)', section=f'{name} All Trials')
-        plt.close()
+        # # Add the figure to the report
+        # report.add_figure(figure_snr, f'Average SNR ({freq} Hz)', section=f'{name} All Trials')
+        # plt.close()
 
-        report.add_html(html = html, title='Kept epochs', section=f'{name} {freq} Trials')
+        # report.add_html(html = html, title='Kept epochs', section=f'{name} {freq} Trials')
 
 
         # Compute PSD and SNR per participant and trial
@@ -459,18 +454,18 @@ for name, raws in participant_data.items():
             report.add_figure(figure_psd, f'PSD ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
             plt.close()
 
-            # Compute SNR
-            snr = snr_spectrum(psd, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-            figure_snr = compute_snr_graph(snr, freqs, freq)
-            report.add_figure(figure_snr, f'SNR ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
-            plt.close()
+            # # Compute SNR
+            # snr = snr_spectrum(psd, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+            # figure_snr = compute_snr_graph(snr, freqs, freq)
+            # report.add_figure(figure_snr, f'SNR ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
+            # plt.close()
 
-    try: # Try statement is used when plotting dropped trials 
-        # Plot SNR bar graph
-        fig = create_snr_bar_graph(snr_values, freqs, name)
-        report.add_figure(fig, f'Average SNR at target frequencies for {name}', section=f'{name} All Trials')
-    except:
-        print("No Dropped Trials")
+    # try: # Try statement is used when plotting dropped trials 
+    #     # Plot SNR bar graph
+    #     fig = create_snr_bar_graph(snr_values, freqs, name)
+    #     report.add_figure(fig, f'Average SNR at target frequencies for {name}', section=f'{name} All Trials')
+    # except:
+    #     print("No Dropped Trials")
 
 # Insert underscores into report_name
 report_name = report_name.replace(" ", "_")
