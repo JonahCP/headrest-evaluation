@@ -112,6 +112,7 @@ def get_trimmed_files(pick_dirs=None):
     base_directory = 'hr_data'
 
     directories = [f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f)) and f in pick_dirs] # type: ignore
+    directories.sort(key = lambda x: int(x[11:]))
 
     participant_names = []
     all_filepaths = []
@@ -121,7 +122,7 @@ def get_trimmed_files(pick_dirs=None):
             # Split the directory name to get the participant number
             name = directory.split('_')[1]
         else:
-            name = (directory[:-1]  + ' ' + directory[-1]).title()
+            name = (directory[:11]  + ' ' + directory[11:]).title()
 
         for i in range(1, 9):
             file_path = f'{base_directory}/{directory}/ssvep{i}_trim.csv'
@@ -136,6 +137,7 @@ def get_timestamps(pick_dirs=None):
     base_directory = 'hr_data'
 
     directories = [f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f)) and f in pick_dirs] # type: ignore
+    directories.sort(key = lambda x: int(x[11:]))
     all_timestamps = []
 
     for directory in directories:
@@ -160,10 +162,7 @@ def get_timestamps(pick_dirs=None):
 
     return all_timestamps
 
-def compute_psd_graph(psds, freqs, freq):
-    
-    # Plot PSD spectrum
-    figure_psd = plt.figure()
+def compute_psd_graph(psds, freqs, freq, individual=False):
 
     psd_db = 10 * np.log10(psds)
 
@@ -186,24 +185,54 @@ def compute_psd_graph(psds, freqs, freq):
         channel_2 = psd_db[1, :]
         channel_3 = psd_db[2, :]
 
-    plt.plot(freqs, channel_1, color='blue', linewidth=0.5, label='Channel 1')
-    plt.plot(freqs, channel_2, color='green', linewidth=0.5, label='Channel 2')
-    plt.plot(freqs, channel_3, color='red', linewidth=0.5, label='Channel 3')
-    plt.plot(freqs, psd_mean, zorder=3, color='black', linewidth=2, label='Average PSD')
-    # plt.fill_between(freqs, psd_mean - psd_std, psd_mean + psd_std, color='black', alpha=0.2)
+    channels = [channel_1, channel_2, channel_3]
 
-    plt.title(f'PSD ({freq} Hz)')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Power Spectral Density (dB)')
+    if individual:
+        figures = []
 
-    # Create vertical lines to indicate harmonics
-    plt.axvline(x=freq, color='red', linestyle='--', label='1f')
-    plt.axvline(x=freq*2, color='blue', linestyle='--', label='2f')
-    # plt.axvline(x=freq*3, color='green', linestyle='--', label='3f')
-    plt.legend(loc='upper right')
-    plt.ylim(-10, 50)
+        for i, channel in enumerate(channels):
+            # Plot PSD spectrum
+            figure_psd = plt.figure()
 
-    return figure_psd
+            plt.plot(freqs, channel, zorder=3, color='black', linewidth=2, label='Channel ' + str(i+1))
+            plt.fill_between(freqs, psd_mean - psd_std, psd_mean + psd_std, color='black', alpha=0.2)
+
+            plt.title(f'PSD ({freq} Hz)')
+            plt.xlabel('Frequency (Hz)')
+            plt.ylabel('Power Spectral Density (dB)')
+
+            # Create vertical lines to indicate harmonics
+            plt.axvline(x=freq, color='red', linestyle='--', label='1f')
+            plt.axvline(x=freq*2, color='blue', linestyle='--', label='2f')
+            # plt.axvline(x=freq*3, color='green', linestyle='--', label='3f')
+            plt.legend(loc='upper right')
+            plt.ylim(-10, 50)
+
+            figures.append(figure_psd)
+
+        return figures
+
+    else:
+        figure_psd = plt.figure()
+
+        # plt.plot(freqs, channel_1, color='blue', linewidth=0.5, label='Channel 1')
+        # plt.plot(freqs, channel_2, color='green', linewidth=0.5, label='Channel 2')
+        # plt.plot(freqs, channel_3, color='red', linewidth=0.5, label='Channel 3')
+        plt.plot(freqs, psd_mean, zorder=3, color='black', linewidth=2, label='Average PSD')
+        plt.fill_between(freqs, psd_mean - psd_std, psd_mean + psd_std, color='black', alpha=0.2)
+
+        plt.title(f'PSD ({freq} Hz)')
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Power Spectral Density (dB)')
+
+        # Create vertical lines to indicate harmonics
+        plt.axvline(x=freq, color='red', linestyle='--', label='1f')
+        plt.axvline(x=freq*2, color='blue', linestyle='--', label='2f')
+        # plt.axvline(x=freq*3, color='green', linestyle='--', label='3f')
+        plt.legend(loc='upper right')
+        plt.ylim(-10, 50)
+
+        return figure_psd
 
 def compute_snr_graph(snr, freqs, freq):
     if len(snr.shape) == 3:
@@ -236,7 +265,7 @@ def compute_snr_graph(snr, freqs, freq):
 
     # Plotting the mean SNR
     plt.plot(freqs, snr_mean, zorder=3, color='black', linewidth=2, label='Average SNR')  
-    # plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
+    plt.fill_between(freqs, snr_mean - snr_std, snr_mean + snr_std, color='black', alpha=0.2, zorder=1)  # Filling between ±1 SD
 
     plt.title(f'SNR ({freq} Hz)')
     plt.xlabel('Frequency (Hz)')
@@ -254,22 +283,22 @@ def compute_snr_graph(snr, freqs, freq):
 
 def create_snr_bar_graph(snr_values, freqs, name): 
     color_mapping = {
-    7.5: 'darkblue',
-    8.57: 'darkgreen',
-    10: 'darkred',
-    12: 'darkorange',
-    15: 'mediumblue',
-    17.14: 'green',
-    20: 'firebrick',
-    22.5: 'blue',
-    24: 'orange',
-    # 25.71: 'seagreen',
-    # 30: 'red',
-    # 36: 'gold'
+    7.5: 'royalblue',
+    8.57: 'limegreen',
+    10: 'red',
+    12: 'darkviolet',
+    15: 'royalblue',
+    17.14: 'limegreen',
+    20: 'red',
+    22.5: 'royalblue',
+    24: 'darkviolet',
+    25.71: 'limegreen',
+    30: 'red',
+    36: 'darkviolet'
     }
 
-    # freq_plot = [7.5, 8.57, 10, 12, 15, 17.14, 20, 22.5, 24, 25.71, 30, 36]
-    freq_plot = [7.5, 8.57, 10, 12, 15, 17.14, 20, 22.5, 24]
+    freq_plot = [7.5, 8.57, 10, 12, 15, 17.14, 20, 22.5, 24, 25.71, 30, 36]
+    # freq_plot = [7.5, 8.57, 10, 12, 15, 17.14, 20, 22.5, 24]
     stim_freqs = [7.5, 8.57, 10, 12]
 
     fig, ax = plt.subplots()
@@ -320,7 +349,7 @@ def create_snr_bar_graph(snr_values, freqs, name):
 # Specify files to use
 # us = ['Feb27_Robert', 'Feb27_Jason', 'Feb23_Ella']
 us = []
-participants = ['participant' + str(i) for i in range(1, 7)] 
+participants = ['participant' + str(i+1) for i in range(20)] 
 pick_dirs = us + participants
 # pick_dirs = ['Feb27_Robert', 'Feb27_Jason']
 
@@ -331,10 +360,10 @@ FileMatrix = [SSVEPFiles, SSVEPTimestamps, names_files]
 
 FileDataFrame = pd.DataFrame(FileMatrix)
 
-name = 'Participants 1-6'
+title = 'Participants 1-20'
 
 # Create a report for the current file
-report = mne.Report(title=f'SSVEP {name} Report', verbose=True)
+report = mne.Report(title=f'SSVEP {title} Report', verbose=True)
 
 # Parametesr
 freq_mapping = {
@@ -346,7 +375,7 @@ freq_mapping = {
 
 tmin = 1
 tmax = 7
-n_fft = int(206 * ( tmax - tmin )/ 2)
+n_fft = int(206 * ( tmax - tmin ))
 n_overlap = n_fft // 2
 window = 'hamming'
 
@@ -429,18 +458,23 @@ for event_id, freq in freq_mapping.items():
     report.add_figure(figure_psd, f'PSD ({freq} Hz)', section='All Participants All Trials')
     plt.close()
 
-    snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-    snr_values.append(snr)
-    figure_snr = compute_snr_graph(snr, freqs, freq)
+    figures = compute_psd_graph(psds, freqs, freq, individual=True)
+    for i, figure in enumerate(figures): # type: ignore
+        report.add_figure(figure, f'PSD ({freq} Hz)', section='All Participants All Trials, Channel ' + str(i+1))
+        plt.close()
 
-    report.add_figure(figure_snr, f'SNR ({freq} Hz)', section='All Participants All Trials')
-    plt.close()
+    # snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+    # snr_values.append(snr)
+    # figure_snr = compute_snr_graph(snr, freqs, freq)
 
-try: # Try statement is used when plotting dropped trials
-    fig = create_snr_bar_graph(snr_values, freqs, name)
-    report.add_figure(fig, 'Average SNR at target frequencies', section='All Participants All Trials')
-except:
-    print("No Dropped Trials")
+    # report.add_figure(figure_snr, f'SNR ({freq} Hz)', section='All Participants All Trials')
+    # plt.close()
+
+# try: # Try statement is used when plotting dropped trials
+#     fig = create_snr_bar_graph(snr_values, freqs, name)
+#     report.add_figure(fig, 'Average SNR at target frequencies', section='All Participants All Trials')
+# except:
+#     print("No Dropped Trials")
 
 # Compute PSD and SNR for each participant
 for name, raws in participant_raw.items():
@@ -504,43 +538,45 @@ for name, raws in participant_raw.items():
         report.add_figure(figure_psd, f'Average PSD ({freq} Hz)', section=f'{name} All Trials')
         plt.close()
 
-        # Compute SNR
-        snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-        snr_values.append(snr)
-        figure_snr = compute_snr_graph(snr, freqs, freq)
+        # # Compute SNR
+        # snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+        # snr_values.append(snr)
+        # figure_snr = compute_snr_graph(snr, freqs, freq)
 
-        # Add the figure to the report
-        report.add_figure(figure_snr, f'Average SNR ({freq} Hz)', section=f'{name} All Trials')
-        plt.close()
-
-        report.add_html(html = html, title='Kept epochs', section=f'{name} {freq} Trials')
+        # # Add the figure to the report
+        # report.add_figure(figure_snr, f'Average SNR ({freq} Hz)', section=f'{name} All Trials')
+        # plt.close()
 
 
-        # Compute PSD and SNR per participant and trial
-        for i, trial in enumerate(epochs_indices):
-            epoch = epochs[i].load_data() # type: ignore
-            raw_data = epoch.plot(scalings={'eeg': 500}, show=False)
-            report.add_figure(raw_data, f'Raw data for ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
-            plt.close()
 
-            # Compute PSD
-            spectrum = epoch.compute_psd(method='welch', fmin=1, fmax=40, window=window, n_overlap = n_overlap, n_fft=n_fft)
-            psd, freqs = spectrum.get_data(return_freqs=True)
-            figure_psd = compute_psd_graph(psd, freqs, freq)
-            report.add_figure(figure_psd, f'PSD ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
-            plt.close()
+    #     report.add_html(html = html, title='Kept epochs', section=f'{name} {freq} Trials')
 
-            # Compute SNR
-            snr = snr_spectrum(psd, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-            figure_snr = compute_snr_graph(snr, freqs, freq)
-            report.add_figure(figure_snr, f'SNR ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
-            plt.close()
 
-    try: # Try statement is used when plotting dropped trials 
-        # Plot SNR bar graph
-        fig = create_snr_bar_graph(snr_values, freqs, name)
-        report.add_figure(fig, f'Average SNR at target frequencies for {name}', section=f'{name} All Trials')
-    except:
-        print("No Dropped Trials")
+    #     # Compute PSD and SNR per participant and trial
+    #     for i, trial in enumerate(epochs_indices):
+    #         epoch = epochs[i].load_data() # type: ignore
+    #         # raw_data = epoch.plot(scalings={'eeg': 500}, show=False)
+    #         # report.add_figure(raw_data, f'Raw data for ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
+    #         # plt.close()
 
-report.save(f'./reports/{name}_SSVEP_headrest.html', overwrite=True)
+    #         # Compute PSD
+    #         spectrum = epoch.compute_psd(method='welch', fmin=1, fmax=40, window=window, n_overlap = n_overlap, n_fft=n_fft)
+    #         psd, freqs = spectrum.get_data(return_freqs=True)
+    #         figure_psd = compute_psd_graph(psd, freqs, freq)
+    #         report.add_figure(figure_psd, f'PSD ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
+    #         plt.close()
+
+    #     # Compute SNR
+    #     snr = snr_spectrum(psd, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+    #     figure_snr = compute_snr_graph(snr, freqs, freq)
+    #     report.add_figure(figure_snr, f'SNR ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
+    #     plt.close()
+
+    # try: # Try statement is used when plotting dropped trials 
+    #     # Plot SNR bar graph
+    #     fig = create_snr_bar_graph(snr_values, freqs, name)
+    #     report.add_figure(fig, f'Average SNR at target frequencies for {name}', section=f'{name} All Trials')
+    # except:
+    #     print("No Dropped Trials")
+
+report.save(f'./reports/{title}_SSVEP_headrest.html', overwrite=True)
