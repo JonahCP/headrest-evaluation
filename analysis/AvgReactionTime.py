@@ -22,7 +22,7 @@ def get_timestamps(i):
 
 total_times = []
 
-for n in range(4):
+for n in range(20):
     ERPTimestamps = get_timestamps(n + 1)
 
     # Initialize a list to store time differences
@@ -52,7 +52,10 @@ for n in range(4):
         if len(trial_time_diffs) != 0:
             time_diffs += trial_time_diffs
             avg_time_diff = (sum(trial_time_diffs) / len(trial_time_diffs)) * 1000
-            # print(f'Average time for Participant #{n + 1} Trial #{i + 1}:', avg_time_diff, "miliseconds")
+            print(f'Average time for Participant #{n + 1} Trial #{i + 1}:', avg_time_diff, "miliseconds")
+
+        else:
+            print(f'Average time for Participant #{n + 1} Trial #{i + 1}: UNDEFINED')
 
     # Calculate the average time difference
     if len(time_diffs) != 0:

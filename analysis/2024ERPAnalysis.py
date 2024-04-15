@@ -115,25 +115,10 @@ for i, file in enumerate(ERPfiles):
 
         final_epochs.drop_bad(reject={'eeg': reject['eeg'], 'eog': reject['eog']})
 
-        # final_epochs.plot_drop_log()
-        # final_epochs.plot(picks=picks, events=events, scalings=scalings)
-
-        # Define filter parameters
-        # low_cutoff = 1  # Set your desired low-pass cutoff frequency in Hz
-        # high_cutoff = 30  # Set to None for low-pass filtering
-        #
-        # # Apply low-pass filter
-        # final_epochs.filter(low_cutoff, high_cutoff, fir_design='firwin', filter_length=10000)
-
-        # final_epochs.filter(l_freq=.1, h_freq=30, picks='eeg')
-
-        # final_epochs.plot(picks=picks, events=events, scalings=scalings)
         if final_epochs.__len__() == 0:
             break
 
         final_epochs = final_epochs.apply_baseline(baseline=(-.25, 0))
-
-        # final_epochs.plot(picks=picks, events=events, scalings=scalings)
 
         if eid == 2:
             base_epochs = final_epochs.copy()
@@ -175,11 +160,11 @@ grand_average_target_stimuli.plot_joint()
 # report.save(overwrite=True)
 
 
-channels_of_interests = ['FP1', 'FPZ', 'FP2', 'F3', 'FZ', 'F4', 'FC5', 'FC1', 'FC2', 'FC6', 'T7', 'C3', 'CZ', 'C4', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'PZ', 'P4', 'P8', 'POZ', 'O1', 'OZ', 'O2']
+channels_of_interests = ['CZ']
 
 # Calculate the number of rows and columns for the grid
-num_rows = 3
-num_cols = 3
+num_rows = 1
+num_cols = 1
 
 # Calculate the number of subplots needed
 num_subplots = int(np.ceil(len(channels_of_interests) / (num_rows * num_cols)))
@@ -204,7 +189,7 @@ for subplot_idx in range(num_subplots):
     fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 12))
 
     # Flatten the axes array for easy indexing
-    axes = axes.flatten()
+    # axes = axes.flatten()
 
     # Loop over channels and plot on separate subplots
     for idx, ch_name in enumerate(channels_of_interests[start_channel_idx:end_channel_idx]):
@@ -212,30 +197,33 @@ for subplot_idx in range(num_subplots):
         target_data = grand_average_target_stimuli.get_data(picks=ch_name)
 
         # Plot the data for the current channel on the corresponding subplot
-        axes[idx].plot(grand_average_base_stimuli.times * 1000, base_data[0], label='Base Stimuli', color='blue')
-        axes[idx].plot(grand_average_target_stimuli.times * 1000, target_data[0], label='Target Stimuli', color='red')
+        axes.plot(grand_average_base_stimuli.times * 1000, base_data[0], label='Base Stimuli', color='blue')
+        axes.plot(grand_average_target_stimuli.times * 1000, target_data[0], label='Target Stimuli', color='red')
 
         # Add vertical lines at specific time points
-        axes[idx].axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
-        axes[idx].axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
+        axes.axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
+        axes.axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
         # axes[idx].axvline(x=430, color='green', linestyle='--', label='Vertical Line at 430ms')
 
         # Add a horizontal line at y=0
-        axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
+        axes.axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(f'Averaged Epochs for {ch_name}')
-        axes[idx].set_xlabel('Time (ms)')
-        axes[idx].set_ylabel('Amplitude (uV)')
+        axes.set_title(f'Participants #1-4 Grand Averaged Epochs for {ch_name} (Targets:{num_of_targets}, Base:{num_of_base})')
+        axes.set_xlabel('Time (ms)')
+        axes.set_ylabel('Amplitude (uV)')
 
         # Invert the y-axis to flip the negative values upwards
-        axes[idx].invert_yaxis()
+        axes.invert_yaxis()
 
         # Set y-axis limits
-        axes[idx].set_ylim(min_y, max_y)
+        axes.set_ylim(-8, 8)
+
+        # Set x-axis limits to 0 to 600 milliseconds
+        axes.set_xlim(0, 600)
 
         # Add legend
-        axes[idx].legend()
+        axes.legend()
 
     # Adjust layout with auto spacing
     plt.tight_layout()

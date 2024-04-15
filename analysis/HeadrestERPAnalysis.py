@@ -62,10 +62,16 @@ def format_raw_data_frame(DataFrame, startTime):
     return raw_channel_data
 
 
+def numeric_participant_sort(dir):
+    return int(dir.lstrip("participant"))
+
+
 def get_trimmed_files():
     base_directory = 'hr_data'
+
     # The line below searches the hr_data directory for other directories (which contain the test data)
-    directories = [f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f))]
+    directories = sorted([f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f))],
+                         key=numeric_participant_sort)
 
     files = []
 
@@ -81,7 +87,8 @@ def get_trimmed_files():
 def get_timestamps():
     base_directory = 'hr_data'
     # The line below searches the hr_data directory for other directories (which contain the test data)
-    directories = [f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f))]
+    directories = sorted([f for f in os.listdir(base_directory) if os.path.isdir(os.path.join(base_directory, f))],
+                         key=numeric_participant_sort)
 
     files = []
 
@@ -152,12 +159,10 @@ for i in range(FileDataFrame.columns.size):
 
     # raw.compute_psd().plot()
 
-
     # Use 5 to 11 to capture Theta + Alpha bands
     # raw.filter(5, 11, fir_design='firwin', fir_window='hamming')
     # raw.filter(5, 7, fir_design='firwin', fir_window='hamming')
-    raw.filter(5, 30, fir_design='firwin', fir_window='hamming')
-
+    raw.filter(5, 27, fir_design='firwin', fir_window='hamming')
 
     # raw.compute_psd().plot()
 
@@ -165,7 +170,7 @@ for i in range(FileDataFrame.columns.size):
     events, event_id = mne.events_from_annotations(raw)
 
     # Where 2 is base and 3 is target stimuli
-    if 31 < i < 48:
+    if 31 < i < 48 or i == 64:
         event_ids_of_interest = [2, 3]
     else:
         # Where 3 is base and 4 is target stimuli
@@ -186,13 +191,13 @@ for i in range(FileDataFrame.columns.size):
         final_epochs = mne.Epochs(raw, events, eid, tmin=-0.25, tmax=0.75,
                                   preload=True, event_repeated='merge')
 
-        # final_epochs.plot(scalings='auto')
-
         reject = get_rejection_threshold(final_epochs)['eeg']
 
-        # final_epochs.plot(scalings='auto')
-
         final_epochs.drop_bad(reject={'eeg': reject})
+
+        # This line throws out the data for the participant clicking the space bar on all shapes
+        if i == 72:
+            final_epochs.drop_bad(reject={'eeg': 0})
 
         # Get drop log
         # drop_log = final_epochs.drop_log
@@ -210,18 +215,16 @@ for i in range(FileDataFrame.columns.size):
         # final_epochs.plot(scalings='auto')
 
         # final_epochs.plot(picks=picks, events=events, scalings=scalings)
-        if final_epochs.__len__() == 0:
-            break
+        if final_epochs.__len__() != 0:
+            final_epochs = final_epochs.apply_baseline(baseline=(-0.25, 0))
 
-        final_epochs = final_epochs.apply_baseline(baseline=(-0.25, 0))
-
-        if eid == event_ids_of_interest[0]:
-            base_epochs = final_epochs.copy()
-            num_of_base += base_epochs.events.shape[0]
-        else:
-            # final_epochs.plot(scalings='auto')
-            target_epochs = final_epochs.copy()
-            num_of_targets += target_epochs.events.shape[0]
+            if eid == event_ids_of_interest[0]:
+                base_epochs = final_epochs.copy()
+                num_of_base += base_epochs.events.shape[0]
+            else:
+                # final_epochs.plot(scalings='auto')
+                target_epochs = final_epochs.copy()
+                num_of_targets += target_epochs.events.shape[0]
 
     # base_epochs.plot(picks=picks, events=events, scalings='auto')
     # target_epochs.plot(picks=picks, events=events, scalings='auto')
@@ -282,13 +285,14 @@ for subplot_idx in range(num_subplots):
         # Add vertical lines at specific time points
         axes[idx].axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
         axes[idx].axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
-        axes[idx].axvline(x=415, color='orange', linestyle='--', label='Avg Reaction Time')
+        axes[idx].axvline(x=438, color='orange', linestyle='--', label='Avg Reaction Time')
 
         # Add a horizontal line at y=0
         axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(f'All Participants Grand Averaged Epochs for {ch_name} (Targets:{num_of_targets}, Base:{num_of_base})')
+        axes[idx].set_title(
+            f'All Participants Grand Averaged Epochs for {ch_name} (Targets Shown: {num_of_targets}, Base Shown: {num_of_base})')
         axes[idx].set_xlabel('Time (ms)')
         axes[idx].set_ylabel('Amplitude (uV)')
 
@@ -299,7 +303,7 @@ for subplot_idx in range(num_subplots):
         axes[idx].set_ylim(min_y, max_y)
 
         # Set x-axis limits to 0 to 600 milliseconds
-        # axes[idx].set_xlim(0, 600)
+        axes[idx].set_xlim(0, 600)
 
         # Add legend
         axes[idx].legend()
