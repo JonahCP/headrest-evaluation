@@ -54,6 +54,8 @@ list_of_avg_target_stimuli_across_all_trials = []
 
 num_of_targets = 0
 num_of_base = 0
+drop_count_target = 0
+drop_count_base = 0
 
 for i, file in enumerate(ERPfiles):
     # Extract only the file name from the full filepath for plot title
@@ -113,8 +115,6 @@ for i, file in enumerate(ERPfiles):
 
         reject = get_rejection_threshold(final_epochs)
 
-        final_epochs.drop_bad(reject={'eeg': reject['eeg'], 'eog': reject['eog']})
-
         if final_epochs.__len__() == 0:
             break
 
@@ -123,10 +123,11 @@ for i, file in enumerate(ERPfiles):
         if eid == 2:
             base_epochs = final_epochs.copy()
             num_of_base += base_epochs.events.shape[0]
+            drop_count_base += 80 - final_epochs.__len__()
         else:
             target_epochs = final_epochs.copy()
             num_of_targets += target_epochs.events.shape[0]
-
+            drop_count_target += 20 - final_epochs.__len__()
     # base_epochs.plot(picks=picks, events=events, scalings=scalings)
     # target_epochs.plot(picks=picks, events=events, scalings=scalings)
 
@@ -160,10 +161,10 @@ grand_average_target_stimuli.plot_joint()
 # report.save(overwrite=True)
 
 
-channels_of_interests = ['CZ']
+channels_of_interests = ['C3', 'CZ', 'C4']
 
 # Calculate the number of rows and columns for the grid
-num_rows = 1
+num_rows = 3
 num_cols = 1
 
 # Calculate the number of subplots needed
@@ -189,7 +190,7 @@ for subplot_idx in range(num_subplots):
     fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 12))
 
     # Flatten the axes array for easy indexing
-    # axes = axes.flatten()
+    axes = axes.flatten()
 
     # Loop over channels and plot on separate subplots
     for idx, ch_name in enumerate(channels_of_interests[start_channel_idx:end_channel_idx]):
@@ -197,33 +198,42 @@ for subplot_idx in range(num_subplots):
         target_data = grand_average_target_stimuli.get_data(picks=ch_name)
 
         # Plot the data for the current channel on the corresponding subplot
-        axes.plot(grand_average_base_stimuli.times * 1000, base_data[0], label='Base Stimuli', color='blue')
-        axes.plot(grand_average_target_stimuli.times * 1000, target_data[0], label='Target Stimuli', color='red')
+        axes[idx].plot(grand_average_base_stimuli.times * 1000, base_data[0], label='Base Stimuli', color='blue')
+        axes[idx].plot(grand_average_target_stimuli.times * 1000, target_data[0], label='Target Stimuli', color='red')
 
         # Add vertical lines at specific time points
-        axes.axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
-        axes.axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
+        axes[idx].axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
+        axes[idx].axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
         # axes[idx].axvline(x=430, color='green', linestyle='--', label='Vertical Line at 430ms')
 
         # Add a horizontal line at y=0
-        axes.axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
+        axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes.set_title(f'Participants #1-4 Grand Averaged Epochs for {ch_name} (Targets:{num_of_targets}, Base:{num_of_base})')
-        axes.set_xlabel('Time (ms)')
-        axes.set_ylabel('Amplitude (uV)')
+        axes[idx].set_title(f'Grand Averaged EEG Epochs for {ch_name}')
+        axes[idx].set_xlabel('Time (ms)')
+        axes[idx].set_ylabel('Amplitude (uV)')
 
         # Invert the y-axis to flip the negative values upwards
-        axes.invert_yaxis()
+        axes[idx].invert_yaxis()
 
         # Set y-axis limits
-        axes.set_ylim(-8, 8)
+        axes[idx].set_ylim(-8, 8)
 
         # Set x-axis limits to 0 to 600 milliseconds
-        axes.set_xlim(0, 600)
+        axes[idx].set_xlim(0, 600)
 
-        # Add legend
-        axes.legend()
+        axes[idx].legend(loc='lower left', fontsize=8)
+
+        # Add annotations for Targets Shown and Bases Dropped
+        targets_shown = f"Targets Shown: {num_of_targets}"
+        targets_dropped = f"Targets Dropped: {drop_count_target}"
+        bases_shown = f"Bases Shown: {num_of_base}"
+        bases_dropped = f"Bases Dropped: {drop_count_base}"
+        axes[idx].annotate(bases_shown, xy=(0.02, 0.92), xycoords='axes fraction', fontsize=8, color='blue')
+        axes[idx].annotate(bases_dropped, xy=(0.02, 0.86), xycoords='axes fraction', fontsize=8, color='blue')
+        axes[idx].annotate(targets_shown, xy=(0.02, 0.80), xycoords='axes fraction', fontsize=8, color='red')
+        axes[idx].annotate(targets_dropped, xy=(0.02, 0.74), xycoords='axes fraction', fontsize=8, color='red')
 
     # Adjust layout with auto spacing
     plt.tight_layout()

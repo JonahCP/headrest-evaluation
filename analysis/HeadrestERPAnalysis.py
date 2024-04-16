@@ -106,6 +106,20 @@ def get_timestamps():
 
     return files
 
+# last value will be the average
+def get_reaction_times():
+    import re
+    pattern = r"\d+\.\d+"
+    milliseconds = []
+    with open("hr_data/participant_reaction_times.txt", "r") as file:
+        for line in file:
+            matches = re.findall(pattern, line)
+            if matches:
+                milliseconds.extend(matches)
+
+    milliseconds = [float(ms) for ms in milliseconds]
+    return milliseconds
+
 
 TrimmedERPFiles = get_trimmed_files()
 ERPTimestamps = get_timestamps()
@@ -120,6 +134,9 @@ list_of_avg_target_stimuli_across_all_trials = []
 
 num_of_targets = 0
 num_of_base = 0
+drop_count_target = 0
+drop_count_base = 0
+
 
 for i in range(FileDataFrame.columns.size):
     ERPDataFrame = read_csv(FileDataFrame[i].iloc[0])
@@ -200,7 +217,10 @@ for i in range(FileDataFrame.columns.size):
             final_epochs.drop_bad(reject={'eeg': 0})
 
         # Get drop log
-        # drop_log = final_epochs.drop_log
+        drop_log = final_epochs.drop_log
+
+        # count dropped epochs
+        # Loop through each channel name
 
         # Plot all epochs
         # final_epochs.plot(scalings='auto', n_epochs=5)  # Plot a subset of epochs for visualization
@@ -209,8 +229,9 @@ for i in range(FileDataFrame.columns.size):
         # for i, d in enumerate(drop_log):
         #     if d and eid == 4:
         #         if d[0] != "IGNORED":
-        #             print(f"Dropped epochs for event index {i}:")
-        #             final_epochs[4].plot(scalings='auto')
+        #             drop_count += 1
+                    # print(f"Dropped epochs for event index {i}:")
+        #             # final_epochs[4].plot(scalings='auto')
 
         # final_epochs.plot(scalings='auto')
 
@@ -221,10 +242,12 @@ for i in range(FileDataFrame.columns.size):
             if eid == event_ids_of_interest[0]:
                 base_epochs = final_epochs.copy()
                 num_of_base += base_epochs.events.shape[0]
+                drop_count_base += 80 - final_epochs.__len__()
             else:
                 # final_epochs.plot(scalings='auto')
                 target_epochs = final_epochs.copy()
                 num_of_targets += target_epochs.events.shape[0]
+                drop_count_target += 20 - final_epochs.__len__()
 
     # base_epochs.plot(picks=picks, events=events, scalings='auto')
     # target_epochs.plot(picks=picks, events=events, scalings='auto')
@@ -239,7 +262,6 @@ for i in range(FileDataFrame.columns.size):
 
 # base_epochs_avg.plot(picks='eeg')
 # target_epochs_avg.plot(picks='eeg')
-
 # Take the grand average of the base and target stimulis
 grand_average_base_stimuli = mne.grand_average(list_of_avg_base_stimuli_across_all_trials)
 grand_average_target_stimuli = mne.grand_average(list_of_avg_target_stimuli_across_all_trials)
@@ -262,6 +284,11 @@ for ch_name in ch_names:
     min_y = min(min_y, np.min([base_data, target_data]))
     max_y = max(max_y, np.max([base_data, target_data]))
 
+
+# Get reaction times and standard deviation
+reaction_times = get_reaction_times()
+std_dev = np.std(reaction_times[:-1])
+
 # Loop over subplots
 for subplot_idx in range(num_subplots):
     start_channel_idx = subplot_idx * num_rows * num_cols
@@ -283,16 +310,18 @@ for subplot_idx in range(num_subplots):
         axes[idx].plot(grand_average_target_stimuli.times * 1000, target_data[0], label='Target Stimuli', color='red')
 
         # Add vertical lines at specific time points
-        axes[idx].axvline(x=0, color='blue', linestyle='--', label='Stimuli Shown')
         axes[idx].axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
-        axes[idx].axvline(x=438, color='orange', linestyle='--', label='Avg Reaction Time')
+        axes[idx].axvline(x=reaction_times[-1], color='orange', linestyle='--', label='Avg Reaction Time')
+
+        # Plot histogram of reaction times around the average reaction time
+        bins = np.linspace(reaction_times[-1] - 2 * std_dev, reaction_times[-1] + 2 * std_dev, 20)
+        axes[idx].hist(reaction_times, bins=bins, alpha=0.5, color='gray', label='Reaction Time Distribution')
 
         # Add a horizontal line at y=0
         axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
 
         # Set labels and title
-        axes[idx].set_title(
-            f'All Participants Grand Averaged Epochs for {ch_name} (Targets Shown: {num_of_targets}, Base Shown: {num_of_base})')
+        axes[idx].set_title(f'Grand Averaged Headrest Epochs for {ch_name}')
         axes[idx].set_xlabel('Time (ms)')
         axes[idx].set_ylabel('Amplitude (uV)')
 
@@ -306,7 +335,17 @@ for subplot_idx in range(num_subplots):
         axes[idx].set_xlim(0, 600)
 
         # Add legend
-        axes[idx].legend()
+        axes[idx].legend(loc='lower left', fontsize=8)
+
+        # Add annotations for Targets Shown and Bases Dropped
+        targets_shown = f"Targets Shown: {num_of_targets}"
+        targets_dropped = f"Targets Dropped: {drop_count_target}"
+        bases_shown = f"Bases Shown: {num_of_base}"
+        bases_dropped = f"Bases Dropped: {drop_count_base}"
+        axes[idx].annotate(bases_shown, xy=(0.02, 0.92), xycoords='axes fraction', fontsize=8, color='blue')
+        axes[idx].annotate(bases_dropped, xy=(0.02, 0.86), xycoords='axes fraction', fontsize=8, color='blue')
+        axes[idx].annotate(targets_shown, xy=(0.02, 0.80), xycoords='axes fraction', fontsize=8, color='red')
+        axes[idx].annotate(targets_dropped, xy=(0.02, 0.74), xycoords='axes fraction', fontsize=8, color='red')
 
     # Adjust layout with auto spacing
     plt.tight_layout()

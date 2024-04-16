@@ -1,0 +1,181 @@
+Average time for Participant #1 Trial #1: 416.44999999999993 miliseconds
+Average time for Participant #1 Trial #2: 424.95000000000005 miliseconds
+Average time for Participant #1 Trial #3: 426.34999999999997 miliseconds
+Average time for Participant #1 Trial #4: 415.09999999999997 miliseconds
+Average time for Participant #1 Trial #5: 419.9 miliseconds
+Average time for Participant #1 Trial #6: 402.3684210526315 miliseconds
+Average time for Participant #1 Trial #7: 408.55000000000007 miliseconds
+Average time for Participant #1 Trial #8: 390.4 miliseconds
+Average time for Participant #1: 413.0754716981132 miliseconds
+Average time for Participant #2 Trial #1: 492.05 miliseconds
+Average time for Participant #2 Trial #2: 435.50000000000006 miliseconds
+Average time for Participant #2 Trial #3: 425.2105263157894 miliseconds
+Average time for Participant #2 Trial #4: 461.19999999999993 miliseconds
+Average time for Participant #2 Trial #5: 449.3 miliseconds
+Average time for Participant #2 Trial #6: 419.70000000000005 miliseconds
+Average time for Participant #2 Trial #7: 428.73684210526307 miliseconds
+Average time for Participant #2 Trial #8: 448.69999999999993 miliseconds
+Average time for Participant #2: 445.2784810126582 miliseconds
+Average time for Participant #3 Trial #1: 380.55000000000007 miliseconds
+Average time for Participant #3 Trial #2: 420.15000000000015 miliseconds
+Average time for Participant #3 Trial #3: 402.79999999999995 miliseconds
+Average time for Participant #3 Trial #4: 406.05 miliseconds
+Average time for Participant #3 Trial #5: 404.5789473684211 miliseconds
+Average time for Participant #3 Trial #6: 412.6842105263157 miliseconds
+Average time for Participant #3 Trial #7: 427.00000000000006 miliseconds
+Average time for Participant #3 Trial #8: 397.7647058823529 miliseconds
+Average time for Participant #3: 406.4545454545455 miliseconds
+Average time for Participant #4 Trial #1: 461.95000000000005 miliseconds
+Average time for Participant #4 Trial #2: 462.2 miliseconds
+Average time for Participant #4 Trial #3: 466.5500000000001 miliseconds
+Average time for Participant #4 Trial #4: 473.80000000000007 miliseconds
+Average time for Participant #4 Trial #5: 453.59999999999997 miliseconds
+Average time for Participant #4 Trial #6: 434.2 miliseconds
+Average time for Participant #4 Trial #7: 429.25 miliseconds
+Average time for Participant #4 Trial #8: 443.2500000000001 miliseconds
+Average time for Participant #4: 453.0999999999999 miliseconds
+Average time for Participant #5 Trial #1: UNDEFINED
+Average time for Participant #5 Trial #2: UNDEFINED
+Average time for Participant #5 Trial #3: UNDEFINED
+Average time for Participant #5 Trial #4: UNDEFINED
+Average time for Participant #5 Trial #5: UNDEFINED
+Average time for Participant #5 Trial #6: UNDEFINED
+Average time for Participant #5 Trial #7: UNDEFINED
+Average time for Participant #5 Trial #8: UNDEFINED
+Average time for Participant #5: UNDEFINED
+Average time for Participant #6 Trial #1: UNDEFINED
+Average time for Participant #6 Trial #2: UNDEFINED
+Average time for Participant #6 Trial #3: UNDEFINED
+Average time for Participant #6 Trial #4: UNDEFINED
+Average time for Participant #6 Trial #5: UNDEFINED
+Average time for Participant #6 Trial #6: UNDEFINED
+Average time for Participant #6 Trial #7: UNDEFINED
+Average time for Participant #6 Trial #8: UNDEFINED
+Average time for Participant #6: UNDEFINED
+Average time for Participant #7 Trial #1: 343.6 miliseconds
+Average time for Participant #7 Trial #2: 402.4 miliseconds
+Average time for Participant #7 Trial #3: 360.0 miliseconds
+Average time for Participant #7 Trial #4: 375.0000000000001 miliseconds
+Average time for Participant #7 Trial #5: 408.8421052631579 miliseconds
+Average time for Participant #7 Trial #6: 377.90000000000003 miliseconds
+Average time for Participant #7 Trial #7: 415.05 miliseconds
+Average time for Participant #7 Trial #8: 375.65 miliseconds
+Average time for Participant #7: 382.13836477987434 miliseconds
+Average time for Participant #8 Trial #1: 389.55 miliseconds
+Average time for Participant #8 Trial #2: 392.69999999999993 miliseconds
+Average time for Participant #8 Trial #3: 355.95 miliseconds
+Average time for Participant #8 Trial #4: 387.59999999999997 miliseconds
+Average time for Participant #8 Trial #5: 374.7 miliseconds
+Average time for Participant #8 Trial #6: 403.8947368421053 miliseconds
+Average time for Participant #8 Trial #7: 416.54999999999995 miliseconds
+Average time for Participant #8 Trial #8: 404.84999999999997 miliseconds
+Average time for Participant #8: 390.6415094339622 miliseconds
+Average time for Participant #9 Trial #1: UNDEFINED
+Average time for Participant #9 Trial #2: 435.36842105263156 miliseconds
+Average time for Participant #9 Trial #3: 530.3 miliseconds
+Average time for Participant #9 Trial #4: 599.7894736842104 miliseconds
+Average time for Participant #9 Trial #5: 497.3684210526316 miliseconds
+Average time for Participant #9 Trial #6: 528.5263157894736 miliseconds
+Average time for Participant #9 Trial #7: 493.25 miliseconds
+Average time for Participant #9 Trial #8: 465.9473684210526 miliseconds
+Average time for Participant #9: 507.2888888888889 miliseconds
+Average time for Participant #10 Trial #1: 410.2999999999999 miliseconds
+Average time for Participant #10 Trial #2: 403.68421052631584 miliseconds
+Average time for Participant #10 Trial #3: 414.9 miliseconds
+Average time for Participant #10 Trial #4: 402.25 miliseconds
+Average time for Participant #10 Trial #5: 391.421052631579 miliseconds
+Average time for Participant #10 Trial #6: 469.2 miliseconds
+Average time for Participant #10 Trial #7: 404.8421052631579 miliseconds
+Average time for Participant #10 Trial #8: 410.35 miliseconds
+Average time for Participant #10: 413.624203821656 miliseconds
+Average time for Participant #11 Trial #1: 407.30000000000007 miliseconds
+Average time for Participant #11 Trial #2: 426.3 miliseconds
+Average time for Participant #11 Trial #3: 438.5 miliseconds
+Average time for Participant #11 Trial #4: 419.6000000000001 miliseconds
+Average time for Participant #11 Trial #5: 418.5999999999999 miliseconds
+Average time for Participant #11 Trial #6: 428.34999999999985 miliseconds
+Average time for Participant #11 Trial #7: 454.70000000000005 miliseconds
+Average time for Participant #11 Trial #8: 430.52631578947364 miliseconds
+Average time for Participant #11: 427.96855345911985 miliseconds
+Average time for Participant #12 Trial #1: 369.90000000000003 miliseconds
+Average time for Participant #12 Trial #2: 400.1 miliseconds
+Average time for Participant #12 Trial #3: 394.10526315789474 miliseconds
+Average time for Participant #12 Trial #4: 413.7368421052631 miliseconds
+Average time for Participant #12 Trial #5: 406.7499999999999 miliseconds
+Average time for Participant #12 Trial #6: 425.8947368421052 miliseconds
+Average time for Participant #12 Trial #7: 441.3157894736842 miliseconds
+Average time for Participant #12 Trial #8: 409.20000000000005 miliseconds
+Average time for Participant #12: 407.33974358974376 miliseconds
+Average time for Participant #13 Trial #1: 406.75000000000006 miliseconds
+Average time for Participant #13 Trial #2: 402.5263157894737 miliseconds
+Average time for Participant #13 Trial #3: 395.5 miliseconds
+Average time for Participant #13 Trial #4: 426.2 miliseconds
+Average time for Participant #13 Trial #5: 431.54999999999995 miliseconds
+Average time for Participant #13 Trial #6: 405.10526315789474 miliseconds
+Average time for Participant #13 Trial #7: 400.78947368421046 miliseconds
+Average time for Participant #13 Trial #8: 396.3 miliseconds
+Average time for Participant #13: 408.19108280254795 miliseconds
+Average time for Participant #14 Trial #1: 391.25 miliseconds
+Average time for Participant #14 Trial #2: 470.6842105263159 miliseconds
+Average time for Participant #14 Trial #3: 430.9 miliseconds
+Average time for Participant #14 Trial #4: 451.2500000000001 miliseconds
+Average time for Participant #14 Trial #5: 416.36842105263156 miliseconds
+Average time for Participant #14 Trial #6: 449.6000000000001 miliseconds
+Average time for Participant #14 Trial #7: 401.85 miliseconds
+Average time for Participant #14 Trial #8: 405.0999999999999 miliseconds
+Average time for Participant #14: 426.91772151898726 miliseconds
+Average time for Participant #15 Trial #1: 477.59999999999997 miliseconds
+Average time for Participant #15 Trial #2: 473.1500000000001 miliseconds
+Average time for Participant #15 Trial #3: 519.3500000000001 miliseconds
+Average time for Participant #15 Trial #4: 505.1500000000001 miliseconds
+Average time for Participant #15 Trial #5: 504.4000000000001 miliseconds
+Average time for Participant #15 Trial #6: 476.9500000000001 miliseconds
+Average time for Participant #15 Trial #7: 547.05 miliseconds
+Average time for Participant #15 Trial #8: 528.45 miliseconds
+Average time for Participant #15: 504.0125000000001 miliseconds
+Average time for Participant #16 Trial #1: 395.1052631578948 miliseconds
+Average time for Participant #16 Trial #2: 386.29999999999995 miliseconds
+Average time for Participant #16 Trial #3: 388.79999999999984 miliseconds
+Average time for Participant #16 Trial #4: 405.80000000000007 miliseconds
+Average time for Participant #16 Trial #5: 394.99999999999994 miliseconds
+Average time for Participant #16 Trial #6: 412.8 miliseconds
+Average time for Participant #16 Trial #7: 402.0499999999999 miliseconds
+Average time for Participant #16 Trial #8: 422.0526315789474 miliseconds
+Average time for Participant #16: 400.8924050632912 miliseconds
+Average time for Participant #17 Trial #1: 463.55 miliseconds
+Average time for Participant #17 Trial #2: 495.65000000000003 miliseconds
+Average time for Participant #17 Trial #3: 486.30000000000007 miliseconds
+Average time for Participant #17 Trial #4: 484.1000000000001 miliseconds
+Average time for Participant #17 Trial #5: 505.30000000000007 miliseconds
+Average time for Participant #17 Trial #6: 497.09999999999997 miliseconds
+Average time for Participant #17 Trial #7: 492.3500000000001 miliseconds
+Average time for Participant #17 Trial #8: 486.35 miliseconds
+Average time for Participant #17: 488.8375 miliseconds
+Average time for Participant #18 Trial #1: 434.50000000000006 miliseconds
+Average time for Participant #18 Trial #2: 442.70000000000005 miliseconds
+Average time for Participant #18 Trial #3: 405.47368421052624 miliseconds
+Average time for Participant #18 Trial #4: 454.65 miliseconds
+Average time for Participant #18 Trial #5: 457.95 miliseconds
+Average time for Participant #18 Trial #6: 505.2000000000001 miliseconds
+Average time for Participant #18 Trial #7: 442.45 miliseconds
+Average time for Participant #18 Trial #8: 483.04999999999995 miliseconds
+Average time for Participant #18: 453.5471698113209 miliseconds
+Average time for Participant #19 Trial #1: 392.7 miliseconds
+Average time for Participant #19 Trial #2: 451.85 miliseconds
+Average time for Participant #19 Trial #3: 476.6500000000001 miliseconds
+Average time for Participant #19 Trial #4: 483.25000000000006 miliseconds
+Average time for Participant #19 Trial #5: 537.3 miliseconds
+Average time for Participant #19 Trial #6: 415.15 miliseconds
+Average time for Participant #19 Trial #7: 452.95 miliseconds
+Average time for Participant #19 Trial #8: 531.75 miliseconds
+Average time for Participant #19: 467.6999999999999 miliseconds
+Average time for Participant #20 Trial #1: 478.65000000000003 miliseconds
+Average time for Participant #20 Trial #2: 467.6 miliseconds
+Average time for Participant #20 Trial #3: 484.9500000000001 miliseconds
+Average time for Participant #20 Trial #4: 517.2105263157894 miliseconds
+Average time for Participant #20 Trial #5: 485.7999999999999 miliseconds
+Average time for Participant #20 Trial #6: 502.73684210526324 miliseconds
+Average time for Participant #20 Trial #7: 488.54999999999995 miliseconds
+Average time for Participant #20 Trial #8: 461.9000000000001 miliseconds
+Average time for Participant #20: 485.6202531645573 miliseconds
+Average time for all participants 437.92379969440367 miliseconds
