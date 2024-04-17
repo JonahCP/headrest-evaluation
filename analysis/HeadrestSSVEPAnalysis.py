@@ -221,9 +221,9 @@ def compute_psd_graph(psds, freqs, freq, individual=False):
         plt.plot(freqs, psd_mean, zorder=3, color='black', linewidth=2, label='Average PSD')
         plt.fill_between(freqs, psd_mean - psd_std, psd_mean + psd_std, color='black', alpha=0.2)
 
-        plt.title(f'PSD ({freq} Hz)')
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Power Spectral Density (dB)')
+    plt.title(f'Average PSD Across Participants and Channels ({freq} Hz)')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Power/frequency (dB/Hz)')
 
         # Create vertical lines to indicate harmonics
         plt.axvline(x=freq, color='red', linestyle='--', label='1f')
@@ -349,7 +349,8 @@ def create_snr_bar_graph(snr_values, freqs, name):
 # Specify files to use
 # us = ['Feb27_Robert', 'Feb27_Jason', 'Feb23_Ella']
 us = []
-participants = ['participant' + str(i+1) for i in range(20)] 
+participants = ['participant' + str(i) for i in range(1, 7)] 
+# participants = ['participant1']
 pick_dirs = us + participants
 # pick_dirs = ['Feb27_Robert', 'Feb27_Jason']
 
@@ -360,7 +361,7 @@ FileMatrix = [SSVEPFiles, SSVEPTimestamps, names_files]
 
 FileDataFrame = pd.DataFrame(FileMatrix)
 
-title = 'Participants 1-20'
+name = 'Participant1-6'
 
 # Create a report for the current file
 report = mne.Report(title=f'SSVEP {title} Report', verbose=True)
@@ -376,8 +377,9 @@ freq_mapping = {
 tmin = 1
 tmax = 7
 n_fft = int(206 * ( tmax - tmin ))
-n_overlap = n_fft // 2
-window = 'hamming'
+# n_overlap = n_fft // 2
+n_overlap = 0
+window = 'boxcar'
 
 raw_all = []
 participant_raw = {}
@@ -417,10 +419,19 @@ snr_values = []
 # Compute PSD and SNR for all participants
 for event_id, freq in freq_mapping.items():
     # Extract epochs for the current frequency
-    epochs = mne.Epochs(raw_all, events, event_id, event_repeated='merge', tmin=tmin, tmax=tmax, baseline=None, preload=True, verbose=None)
+    epochs = mne.Epochs(raw_all, events, event_id, event_repeated='merge', tmin=tmin, tmax=tmax, baseline=True, preload=True, verbose=None)
+
+
 
     # Highpass filter at 1 Hz to improve autoreject
-    epochs.filter(1, None, fir_design='firwin', verbose=True)
+    # epochs.filter(4, None, fir_design='firwin', verbose=True, filter_length = 4)
+
+    iir_params = dict(order=2, ftype='butter')
+    epochs.filter(4, None, method='iir', iir_params = iir_params)
+
+    # Filter epochs with a butterworth highpass filter at cutoff of 4 and order of 4
+    
+
     num_epochs = epochs.__len__()
 
     original_indices = epochs.selection
@@ -440,7 +451,9 @@ for event_id, freq in freq_mapping.items():
 
     # # Determine how many epochs were kept
     kept_epochs = len(epochs_indices)
-    html = f'<p> Kept {kept_epochs} epochs out of {num_epochs} for freq {freq} </p>'
+    html = f"""<p> Kept {kept_epochs} epochs out of {num_epochs} for freq {freq} </p>
+    <p> Rejection Threshold: {reject} </p>
+    """
     report.add_html(html = html, title='Kept', section='All Participants All Trials')
 
     # # Look at dropped files
@@ -458,11 +471,6 @@ for event_id, freq in freq_mapping.items():
     report.add_figure(figure_psd, f'PSD ({freq} Hz)', section='All Participants All Trials')
     plt.close()
 
-    figures = compute_psd_graph(psds, freqs, freq, individual=True)
-    for i, figure in enumerate(figures): # type: ignore
-        report.add_figure(figure, f'PSD ({freq} Hz)', section='All Participants All Trials, Channel ' + str(i+1))
-        plt.close()
-
     # snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
     # snr_values.append(snr)
     # figure_snr = compute_snr_graph(snr, freqs, freq)
@@ -476,88 +484,90 @@ for event_id, freq in freq_mapping.items():
 # except:
 #     print("No Dropped Trials")
 
-# Compute PSD and SNR for each participant
-for name, raws in participant_raw.items():
+# # Compute PSD and SNR for each participant
+# for name, raws in participant_raw.items():
 
-    raw_concat = mne.concatenate_raws(raws)
-    events, _ = mne.events_from_annotations(raw_concat)
-    snr_values = []
+#     raw_concat = mne.concatenate_raws(raws)
+#     events, _ = mne.events_from_annotations(raw_concat)
+#     snr_values = []
 
-    # Compute PSD for each frequency and average
-    for event_id, freq in freq_mapping.items():
-        # Extract epochs for the current frequency
-        epochs = mne.Epochs(raw_concat, events, event_id, event_repeated='merge', tmin=tmin, tmax=tmax, baseline=None, preload=True, verbose=None)
+#     # Compute PSD for each frequency and average
+#     for event_id, freq in freq_mapping.items():
+#         # Extract epochs for the current frequency
+#         epochs = mne.Epochs(raw_concat, events, event_id, event_repeated='merge', tmin=tmin, tmax=tmax, baseline=True, preload=True, verbose=None)
 
-        # Apply highpass filter at 1 Hz to improve autoreject
-        epochs.filter(1, None, fir_design='firwin', verbose=True)
-        num_epochs = epochs.__len__()
+#         # Apply highpass filter at 1 Hz to improve autoreject
+#         # epochs.filter(4, None, fir_design='firwin', verbose=True, filter_length=4)
 
-        original_indices = epochs.selection
+#         iir_params = dict(order=2, ftype='butter')
+#         epochs.filter(4, None, method='iir', iir_params = iir_params)
 
-        epochs_copy = epochs.copy()
+#         num_epochs = epochs.__len__()
 
-        if epochs.__len__() > 2:
-            reject = get_rejection_threshold(epochs, cv=epochs.__len__())['eeg']
-            epochs.drop_bad(reject={'eeg': reject}) # type: ignore
+#         original_indices = epochs.selection
 
-            if epochs.__len__() == 0:
-                print("No epochs found")
-                break
+#         epochs_copy = epochs.copy()
 
-        epochs_indices = epochs.selection
+#         if epochs.__len__() > 2:
+#             reject = get_rejection_threshold(epochs, cv=epochs.__len__())['eeg']
+#             epochs.drop_bad(reject={'eeg': reject}) # type: ignore
 
-        # Determine how many epochs were kept
-        kept_epochs = len(epochs_indices)
+#             if epochs.__len__() == 0:
+#                 print("No epochs found")
+#                 break
 
-        # Determine trials that were dropped by comparing original indices with new indices
-        dropped_trials = numpy.setdiff1d(original_indices, epochs_indices)
-        dropped_trials = dropped_trials // 10 + 1
-        if dropped_trials.size == 0:
-            dropped_trials = 'None'
+#         epochs_indices = epochs.selection
 
-        html = f"""
-        <p> Kept {kept_epochs} epochs out of {num_epochs} for freq {freq}. </p>
-        <p> Dropped trials: {dropped_trials} </p>"""
+#         # Determine how many epochs were kept
+#         kept_epochs = len(epochs_indices)
+
+#         # Determine trials that were dropped by comparing original indices with new indices
+#         dropped_trials = numpy.setdiff1d(original_indices, epochs_indices)
+#         dropped_trials = dropped_trials // 10 + 1
+#         if dropped_trials.size == 0:
+#             dropped_trials = 'None'
+
+#         html = f"""
+#         <p> Kept {kept_epochs} epochs out of {num_epochs} for freq {freq}. </p>
+#         <p> Dropped trials: {dropped_trials} </p>"""
         
-        report.add_html(html = html, title='Kept epochs', section=f'{name} All Trials')
+#         report.add_html(html = html, title='Kept epochs', section=f'{name} All Trials')
 
-        # # Look at dropped files
-        # epoch_indices_mask = np.isin(original_indices, epoch_indices)
-        # epochs_copy.drop(epoch_indices_mask, reason='Dropped trials', verbose=True)
-        # epochs = epochs_copy
-        # epoch_indices = epochs.selection
-        # if epochs.__len__() == 0:
-        #     print("No epochs found")
-        #     break
+#         # # Look at dropped files
+#         # epoch_indices_mask = np.isin(original_indices, epoch_indices)
+#         # epochs_copy.drop(epoch_indices_mask, reason='Dropped trials', verbose=True)
+#         # epochs = epochs_copy
+#         # epoch_indices = epochs.selection
+#         # if epochs.__len__() == 0:
+#         #     print("No epochs found")
+#         #     break
 
-        # Instead compute psds first and then average them
-        spectrums = epochs.compute_psd(method='welch', fmin=1, fmax=40, window=window, n_overlap = n_overlap, n_fft=n_fft)
+#         # Instead compute psds first and then average them
+#         spectrums = epochs.compute_psd(method='welch', fmin=1, fmax=40, window=window, n_overlap = n_overlap, n_fft=n_fft)
 
-        psds, freqs = spectrums.get_data(return_freqs=True)
-        figure_psd = compute_psd_graph(psds, freqs, freq)
-        report.add_figure(figure_psd, f'Average PSD ({freq} Hz)', section=f'{name} All Trials')
-        plt.close()
+#         psds, freqs = spectrums.get_data(return_freqs=True)
+#         figure_psd = compute_psd_graph(psds, freqs, freq)
+#         report.add_figure(figure_psd, f'Average PSD ({freq} Hz)', section=f'{name} All Trials')
+#         plt.close()
 
-        # # Compute SNR
-        # snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-        # snr_values.append(snr)
-        # figure_snr = compute_snr_graph(snr, freqs, freq)
+#         # # Compute SNR
+#         # snr = snr_spectrum(psds, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+#         # snr_values.append(snr)
+#         # figure_snr = compute_snr_graph(snr, freqs, freq)
 
-        # # Add the figure to the report
-        # report.add_figure(figure_snr, f'Average SNR ({freq} Hz)', section=f'{name} All Trials')
-        # plt.close()
+#         # # Add the figure to the report
+#         # report.add_figure(figure_snr, f'Average SNR ({freq} Hz)', section=f'{name} All Trials')
+#         # plt.close()
 
-
-
-    #     report.add_html(html = html, title='Kept epochs', section=f'{name} {freq} Trials')
+#         report.add_html(html = html, title='Kept epochs', section=f'{name} {freq} Trials')
 
 
     #     # Compute PSD and SNR per participant and trial
     #     for i, trial in enumerate(epochs_indices):
     #         epoch = epochs[i].load_data() # type: ignore
-    #         # raw_data = epoch.plot(scalings={'eeg': 500}, show=False)
-    #         # report.add_figure(raw_data, f'Raw data for ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
-    #         # plt.close()
+    #         raw_data = epoch.plot(scalings={'eeg': 500}, show=False)
+    #         report.add_figure(raw_data, f'Raw data for ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
+    #         plt.close()
 
     #         # Compute PSD
     #         spectrum = epoch.compute_psd(method='welch', fmin=1, fmax=40, window=window, n_overlap = n_overlap, n_fft=n_fft)
@@ -566,17 +576,17 @@ for name, raws in participant_raw.items():
     #         report.add_figure(figure_psd, f'PSD ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
     #         plt.close()
 
-    #     # Compute SNR
-    #     snr = snr_spectrum(psd, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
-    #     figure_snr = compute_snr_graph(snr, freqs, freq)
-    #     report.add_figure(figure_snr, f'SNR ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
-    #     plt.close()
+    # #         # Compute SNR
+    # #         snr = snr_spectrum(psd, noise_n_neighbor_freqs=3, noise_skip_neighbor_freqs=1)
+    # #         figure_snr = compute_snr_graph(snr, freqs, freq)
+    # #         report.add_figure(figure_snr, f'SNR ({freq} Hz, Trial {trial // 10 + 1})', section=f'{name} {freq} Trials')
+    # #         plt.close()
 
-    # try: # Try statement is used when plotting dropped trials 
-    #     # Plot SNR bar graph
-    #     fig = create_snr_bar_graph(snr_values, freqs, name)
-    #     report.add_figure(fig, f'Average SNR at target frequencies for {name}', section=f'{name} All Trials')
-    # except:
-    #     print("No Dropped Trials")
+    # # try: # Try statement is used when plotting dropped trials 
+    # #     # Plot SNR bar graph
+    # #     fig = create_snr_bar_graph(snr_values, freqs, name)
+    # #     report.add_figure(fig, f'Average SNR at target frequencies for {name}', section=f'{name} All Trials')
+    # # except:
+    # #     print("No Dropped Trials")
 
-report.save(f'./reports/{title}_SSVEP_headrest.html', overwrite=True)
+report.save(f'./reports/headrest/{name}_SSVEP_headrest_highpass.html', overwrite=True)
