@@ -1,4 +1,5 @@
 import os
+from turtle import title
 import mne
 import pandas as pd
 from pandas import DataFrame, read_csv
@@ -7,6 +8,12 @@ import re
 import numpy as np
 from matplotlib import pyplot as plt
 from autoreject import get_rejection_threshold
+from scipy.stats import ttest_rel
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import LeaveOneGroupOut
+from sklearn.metrics import confusion_matrix, roc_auc_score, f1_score
+import seaborn as sns
 
 
 def format_events_frame(EventsDataFrame):
@@ -120,6 +127,37 @@ def get_reaction_times():
     milliseconds = [float(ms) for ms in milliseconds]
     return milliseconds
 
+def compute_mav_and_var_features(window_data, WSize=20, Olap=10):
+    mav_features = []
+    var_features = []
+
+    # # Calculate MAV and VAR from 250 ms to 550 ms
+    # for i in range(112, 172, Olap):
+    #     window_data = channel_2_data[:, i:i + WSize]
+
+    #     # Calculate MAV
+    #     mav = np.mean(np.abs(window_data), axis=1)
+    #     mav_features.append(mav)
+
+    #     # Calculate VAR
+    #     # Newaxis is used to match the shape of the two arrays
+    #     var = 1/WSize * np.sum(np.square(window_data - mav[:, np.newaxis]), axis=1)
+    #     var_features.append(var)
+
+    indices = [int(207 * .370 +52), int(207 * .490 + 52)]
+    for i in indices:
+        window_data = channel_2_data[:, i:i + 30]
+
+        # Calculate MAV
+        mav = np.mean(np.abs(window_data), axis=1)
+        mav_features.append(mav)
+
+        # Calculate VAR
+        # Newaxis is used to match the shape of the two arrays
+        var = 1/30 * np.sum(np.square(window_data - mav[:, np.newaxis]), axis=1)
+        var_features.append(var)
+
+    return np.array(mav_features), np.array(var_features)
 
 TrimmedERPFiles = get_trimmed_files()
 ERPTimestamps = get_timestamps()
@@ -137,6 +175,7 @@ num_of_base = 0
 drop_count_target = 0
 drop_count_base = 0
 
+classifier_data = []
 
 for i in range(FileDataFrame.columns.size):
     ERPDataFrame = read_csv(FileDataFrame[i].iloc[0])
@@ -256,9 +295,54 @@ for i in range(FileDataFrame.columns.size):
     if base_epochs is not None:
         base_epochs_avg = base_epochs.average(picks='eeg')
         list_of_avg_base_stimuli_across_all_trials.append(base_epochs_avg)
+
+        # Calculate mean average value (MAV) with WSize = 20 and Olap = 10 for second channel
+        channel_2_data = base_epochs.get_data(picks='eeg')[:, 1, :]
+
+        # Calculate MAV and VAR features
+        mav_features, var_features = compute_mav_and_var_features(channel_2_data)
+
+        # Feature dictionary
+        for j in range(mav_features.shape[1]):
+            feature_dict = {
+                'Participant': i,
+                'Base/Target': 0
+            }
+            for k in range(mav_features.shape[0]):
+                feature_dict[f'MAV_{k}'] = mav_features[k, j]
+                feature_dict[f'VAR_{k}'] = var_features[k, j]
+            classifier_data.append(feature_dict)
+
     if target_epochs is not None:
         target_epochs_avg = target_epochs.average(picks='eeg')
         list_of_avg_target_stimuli_across_all_trials.append(target_epochs_avg)
+
+        # Calculate mean average value (MAV) with WSize = 20 and Olap = 10 for second channel
+        channel_2_data = target_epochs.get_data(picks='eeg')[:, 1, :]
+
+        # Calculate MAV and VAR features
+        mav_features, var_features = compute_mav_and_var_features(channel_2_data)
+
+        # Feature dictionary
+        for j in range(mav_features.shape[1]):
+            feature_dict = {
+                'Participant': i,
+                'Base/Target': 1
+            }
+            for k in range(mav_features.shape[0]):
+                feature_dict[f'MAV_{k}'] = mav_features[k, j]
+                feature_dict[f'VAR_{k}'] = var_features[k, j]
+            classifier_data.append(feature_dict)
+
+classifier_df = pd.DataFrame(classifier_data)
+
+# Balance dataset for classification
+base_df = classifier_df[classifier_df['Base/Target'] == 0]
+target_df = classifier_df[classifier_df['Base/Target'] == 1]
+
+sampled_base_df = base_df.sample(n=target_df.shape[0], random_state=42)
+
+balanced_df = pd.concat([sampled_base_df, target_df])
 
 # base_epochs_avg.plot(picks='eeg')
 # target_epochs_avg.plot(picks='eeg')
@@ -350,5 +434,116 @@ for subplot_idx in range(num_subplots):
     # Adjust layout with auto spacing
     plt.tight_layout()
 
-    # Show the plot
-    plt.show()
+# Graph with p-values 
+
+# Convert data to numpy arrays
+data_base = np.array([evoked.data for evoked in list_of_avg_base_stimuli_across_all_trials])
+data_target = np.array([evoked.data for evoked in list_of_avg_target_stimuli_across_all_trials])
+
+# Perform paired t-test
+p_values = []
+for i in range(data_base.shape[2]):
+    _, p = ttest_rel(data_base[:, :, i], data_target[:, :, i], axis=0)
+    p_values.append(p)
+
+p_values = np.array(p_values).T
+
+# Loop over subplots and show shading of p-values below 0.05
+for subplot_idx in range(num_subplots):
+    start_channel_idx = subplot_idx * num_rows * num_cols
+    end_channel_idx = (subplot_idx + 1) * num_rows * num_cols
+
+    # Create a figure with subplots
+    fig, axes = plt.subplots(nrows=num_rows, ncols=num_cols, figsize=(15, 12))
+
+    # Flatten the axes array for easy indexing
+    axes = axes.flatten()
+
+    # Loop over channels and plot on separate subplots
+    for idx, ch_name in enumerate(ch_names[start_channel_idx:end_channel_idx]):
+        base_data = grand_average_base_stimuli.get_data(picks=ch_name)
+        target_data = grand_average_target_stimuli.get_data(picks=ch_name)
+
+        # Plot the data for the current channel on the corresponding subplot
+        axes[idx].plot(grand_average_base_stimuli.times * 1000, base_data[0], label='Base Stimuli', color='blue')
+        axes[idx].plot(grand_average_target_stimuli.times * 1000, target_data[0], label='Target Stimuli', color='red')
+
+        # Add vertical lines at specific time points
+        axes[idx].axvline(x=300, color='green', linestyle='--', label='Vertical Line at 300ms')
+        axes[idx].axvline(x=reaction_times[-1], color='orange', linestyle='--', label='Avg Reaction Time')
+
+        # Add a horizontal line at y=0
+        axes[idx].axhline(y=0, color='black', linestyle='-', linewidth=1, label='Zero Line')
+
+        # Set labels and title
+        axes[idx].set_title(f'Grand Averaged Headrest Epochs for {ch_name}')
+        axes[idx].set_xlabel('Time (ms)')
+        axes[idx].set_ylabel('Amplitude (uV)')
+
+        # Set y-axis limits
+        axes[idx].set_ylim(min_y, max_y)
+
+        # Set x-axis limits to 0 to 600 milliseconds
+        axes[idx].set_xlim(0, 600)
+
+        # Shade the area where p-values are below 0.05
+        axes[idx].fill_between(grand_average_base_stimuli.times * 1000, min_y, max_y,
+                            where=p_values[idx] < 0.05, color='gray', alpha=0.5, label='p < 0.05')
+        
+        # Add legend
+        axes[idx].legend(loc='lower left', fontsize=8)
+
+        # Add annotations for Targets Shown and Bases Dropped
+        targets_shown = f"Targets Shown: {num_of_targets}"
+        targets_dropped = f"Targets Dropped: {drop_count_target}"
+        bases_shown = f"Bases Shown: {num_of_base}"
+        bases_dropped = f"Bases Dropped: {drop_count_base}"
+        axes[idx].annotate(bases_shown, xy=(0.02, 0.92), xycoords='axes fraction', fontsize=8, color='blue')
+        axes[idx].annotate(bases_dropped, xy=(0.02, 0.86), xycoords='axes fraction', fontsize=8, color='blue')
+        axes[idx].annotate(targets_shown, xy=(0.02, 0.80), xycoords='axes fraction', fontsize=8, color='red')
+        axes[idx].annotate(targets_dropped, xy=(0.02, 0.74), xycoords='axes fraction', fontsize=8, color='red')
+
+    # Adjust layout with auto spacing
+    plt.tight_layout()
+
+# Create classifier to classify between base and target stimuli only using channel 2 
+X = balanced_df.drop(columns=['Participant', 'Base/Target'])
+y = balanced_df['Base/Target']
+groups = balanced_df['Participant']
+cv = LeaveOneGroupOut()
+clf = LinearDiscriminantAnalysis()
+
+# Initialize lists to store the accuracy and confusion matrix
+accuracy = []
+aucs = []
+f1_scores = []
+confusion_matrices = []
+
+for train_index, test_index in cv.split(X, y, groups):
+    X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+    clf.fit(X_train, y_train)
+    accuracy.append(clf.score(X_test, y_test))
+    
+    # Calculate the confusion matrix
+    y_pred = clf.predict(X_test)
+    y_prob = clf.predict_proba(X_test)[:, 1]
+    auc = roc_auc_score(y_test, y_prob)
+    aucs.append(auc)
+    f1_scores.append(f1_score(y_test, y_pred, average='macro'))
+    cm = confusion_matrix(y_test, y_pred)
+    confusion_matrices.append(cm)
+
+mean_accuracy = np.mean(accuracy)
+mean_auc = np.mean(aucs)
+
+# Calculate the mean confusion matrix
+mean_cm = np.sum(confusion_matrices, axis=0) 
+macro_f1 = np.mean(f1_scores)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(mean_cm, annot=True, cmap='Blues', xticklabels=['Base', 'Target'], yticklabels=['Base', 'Target'], fmt='d')
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title(f'Confusion Matrix\nAccuracy: {mean_accuracy:.2f}\nAUC: {mean_auc:.2f}')
+plt.show()
