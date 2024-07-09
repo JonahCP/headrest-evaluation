@@ -79,3 +79,6 @@ Locate edf.py in your MNE installation, typically found in mne/io/edf/edf.py.
 Edit line 727: Change ```if info["highpass"] > info["lowpass"]:``` to ```if info["highpass"] >= info["lowpass"]:```
 
 This ensures proper handling of lowpass filter settings for GDF files.
+
+## Visualizations and Analysis
+For detailed visualizations and analysis of ERP data, please refer to the [ERP_modelling.ipynb](https://github.com/JonahCP/headrest-evaluation/blob/main/analysis/ERP_modeling.ipynb) notebook. This notebook contains interactive plots used for ERP modelling process.
